@@ -1,7 +1,11 @@
 """Ingestion guards + the end-to-end analysis pipeline.
 
-The sample is handled entirely in memory: it is never written to disk, never
-executed, and androguard parses it from bytes.
+The static pipeline handles the sample entirely in memory: androguard parses it
+from bytes, and it is never written to disk and never executed.
+
+Dynamic analysis is the one exception, and it is opt-in: `analyse(dynamic=...)`
+and `detonate()` hand the bytes to `sentinelx.dynamic`, which runs them inside an
+isolated sandbox. Nothing detonates unless a caller explicitly asks for it.
 """
 from __future__ import annotations
 import datetime as _dt
@@ -14,13 +18,13 @@ import zipfile
 from pathlib import Path
 from typing import Any
 
-from . import attack, certgraph, classify, evasion, fraud, genai, risk
+from . import attack, certgraph, classify, dynamic as dynamic_mod, evasion, fraud, genai, risk
 from .config import (CASES, LLM_PROVIDER, MAX_APK_BYTES, MAX_COMPRESSION_RATIO,
                      RETENTION_DAYS)
 from .features import signal_bundle
 
 
-SCHEMA_VERSION = 5   # bump whenever the case JSON shape changes
+SCHEMA_VERSION = 6   # bump whenever the case JSON shape changes
 
 
 class IngestError(Exception):
@@ -106,10 +110,15 @@ def purge_expired(days: int = RETENTION_DAYS) -> int:
 
 
 def analyse(data: bytes, path: Path | None = None, filename: str = "sample.apk",
-            use_cache: bool = True) -> dict[str, Any]:
-    """Run the full pipeline on an already-validated APK held in memory."""
+            use_cache: bool = True, dynamic: bool | str = False,
+            allow_upload: bool = False) -> dict[str, Any]:
+    """Run the full pipeline on an already-validated APK held in memory.
+
+    `dynamic` opts this sample into execution: True uses the configured backend,
+    a string names one explicitly. The default, False, never runs the sample.
+    """
     hashes = _hashes(data)
-    if use_cache and (hit := cached(hashes["sha256"])) is not None:
+    if use_cache and not dynamic and (hit := cached(hashes["sha256"])) is not None:
         return hit
 
     from androguard.core.apk import APK
@@ -132,8 +141,19 @@ def analyse(data: bytes, path: Path | None = None, filename: str = "sample.apk",
     fraud_result = fraud.analyse(signals)
     evasion_result = evasion.analyse(apk)
     attack_result = attack.analyse(signals, fraud_result)
+
+    dynamic_result = (
+        dynamic_mod.analyse(data, signals.get("package", ""),
+                            backend=dynamic if isinstance(dynamic, str) else None,
+                            allow_upload=allow_upload, sha256=hashes["sha256"],
+                            evasion=evasion_result)
+        if dynamic else dynamic_mod.schema.skipped())
+    if dynamic_result["status"] == "ERROR":
+        notes.append(f"Dynamic analysis failed: {dynamic_result['detail']} "
+                     "Static results are unaffected.")
+
     risk_result = risk.compute(classification, fraud_result, attribution,
-                               evasion_result, completeness)
+                               evasion_result, completeness, dynamic_result)
 
     case: dict[str, Any] = {
         "schema_version": SCHEMA_VERSION,
@@ -151,6 +171,7 @@ def analyse(data: bytes, path: Path | None = None, filename: str = "sample.apk",
         "fraud": fraud_result,
         "evasion": evasion_result,
         "attack": attack_result,
+        "dynamic": dynamic_result,
         "risk": risk_result,
         "cache_hit": False,
     }
@@ -158,3 +179,14 @@ def analyse(data: bytes, path: Path | None = None, filename: str = "sample.apk",
 
     (CASES / f"{hashes['sha256']}.json").write_text(json.dumps(case, indent=2))
     return case
+
+
+def detonate(data: bytes, filename: str = "sample.apk",
+             backend: str | None = None) -> dict[str, Any]:
+    """Add runtime behaviour to a sample's case, re-scoring it with what was seen.
+
+    The sample is never kept on disk between requests, so the caller re-supplies
+    the bytes. The static half is reused from cache when it is already there.
+    """
+    return analyse(data, None, filename, use_cache=False,
+                   dynamic=backend or True)

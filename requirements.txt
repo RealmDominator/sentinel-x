@@ -18,3 +18,9 @@ fpdf2>=2.7               # PDF intelligence report
 anthropic>=1.2           # optional: live GenAI narrative (template fallback otherwise)
 pyzipper>=0.3.6          # optional: decrypt MalwareBazaar AES zips in memory (real-data scripts)
 pytest>=8.0              # tests
+
+# --- Optional: local dynamic analysis (SENTINELX_DYNAMIC_BACKEND=emulator).
+# Not needed for static analysis, and the sinkhole is stdlib-only by design.
+# adb + emulator come from the Android SDK; scripts/setup_dynamic.py checks them.
+# frida>=16.0            # runtime instrumentation
+# frida-tools>=12.0

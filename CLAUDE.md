@@ -4,8 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-SENTINEL-X — Android banking-malware **static** analysis platform. Upload an `.apk`, get an
-explainable ML verdict, certificate attribution, MITRE ATT&CK chain, composite risk score, GenAI narrative, PDF report and IOC exports.
+SENTINEL-X — Android banking-malware analysis platform. Upload an `.apk`, get an explainable ML
+verdict, certificate attribution, MITRE ATT&CK chain, composite risk score, GenAI narrative, PDF
+report and IOC exports. Static by default; **optional** sandbox detonation adds observed runtime
+behaviour (`sentinelx/dynamic/`).
 
 `Final_md.md` is the authoritative solution specification — read it before changing analysis behaviour.
 `_archive_originals/` (local only, git-ignored) holds superseded planning documents; they are historical, not requirements.
@@ -24,6 +26,10 @@ python scripts/train_model.py                     # retrain; rewrites models/*.j
 python scripts/make_demo.py                       # rebuild data/demo/*.json (required after risk.py edits)
 python scripts/fetch_cert_corpus.py               # replace synthetic cert seed with real MalwareBazaar data
 python scripts/real_world_eval.py [--bazaar]      # full-pipeline detection rate / FPR on real APKs -> data/real_eval.json
+
+python scripts/setup_dynamic.py                   # readiness check for local detonation
+python scripts/setup_dynamic.py --install         # create the rooted AVD + fetch frida-server
+SENTINELX_DYNAMIC_BACKEND=mock python -m uvicorn sentinelx.app:app   # see the dynamic UI with no emulator
 ```
 
 Verify a change end-to-end against a real APK (two are kept in `samples/`):
@@ -36,7 +42,7 @@ curl -F "file=@samples/fdroid_privacybrowser.apk" http://127.0.0.1:8000/api/anal
 
 **One linear pipeline, one shared contract.** `pipeline.analyse()` orchestrates every module and
 assembles a single **case JSON**. Each analysis module owns one top-level key in that dict
-(`classification`, `attribution`, `fraud`, `evasion`, `attack`, `risk`, `narrative`). Three consumers
+(`classification`, `attribution`, `fraud`, `evasion`, `attack`, `dynamic`, `risk`, `narrative`). Three consumers
 read the assembled case and nothing else: `report.py` (PDF), `iocs.py` (JSON/CSV export), and
 `static/index.html` (dashboard). Adding a field means touching the producing module plus whichever
 consumers should surface it.
@@ -64,9 +70,24 @@ intended, documented behaviour and is asserted in the tests.
 
 ## Invariants
 
-- **Never execute a sample, and never write one to disk.** Everything is static parsing via androguard
-  from in-memory bytes (`APK(data, raw=True)`). MalwareBazaar downloads are decrypted in memory
-  (`scripts/bazaar.py`) — writing them to OneDrive gets them quarantined by Defender.
+- **The static pipeline never executes a sample and never writes one to disk.** Everything is static
+  parsing via androguard from in-memory bytes (`APK(data, raw=True)`). MalwareBazaar downloads are
+  decrypted in memory (`scripts/bazaar.py`) — writing them to OneDrive gets them quarantined by
+  Defender. `sentinelx/dynamic/` is the **only** code allowed to execute a sample, under the rules below.
+- **Dynamic analysis is opt-in and contained.** `SENTINELX_DYNAMIC_BACKEND` defaults to `none`, and
+  even when a sandbox is configured nothing detonates unless the caller asks (`/api/detonate`,
+  `analyse(dynamic=...)`, `--dynamic`). Four containment rules must hold: the AVD is a throwaway
+  (`-wipe-data -no-snapshot-save`); its DNS points at `dynamic/sinkhole.py`, so C2 traffic is recorded
+  and never leaves the host; the APK is written **once** to `SENTINELX_DYNAMIC_WORKDIR` (never
+  OneDrive) because `adb install` needs a path, and is deleted in a `finally`; and the `triage`
+  backend, which publishes the sample to a third party, is refused unless the caller passes
+  `allow_upload=True` — only `real_world_eval.py --dynamic` does, and only for already-public
+  MalwareBazaar samples. Never wire `allow_upload=True` into an upload path.
+- **Dynamic confirmation raises the floor, it never re-weights the score.** `risk.WEIGHTS` stays the
+  five static signals summing to 1.0 so composite scores remain comparable across the evaluation sets;
+  `risk.dynamic_reasons()` sets the headline to `MALICIOUS (dynamically confirmed)` and floors
+  severity (CRITICAL when C2 contact accompanies it). A quiet run **never** lowers a score — a trojan
+  that detects the emulator simply sits still, and that is asserted in the tests.
 - **Evasion indicators are tiered.** Reflection / `javax.crypto` / debugger checks exist in nearly every
   benign APK, so they are `weak` and can only rate LOW. Don't add bare-word needles like `generic`.
 - **GenAI output must pass `genai.grounding_errors()`** — no hash, family, bank or ATT&CK ID that isn't in
@@ -95,7 +116,9 @@ intended, documented behaviour and is asserted in the tests.
   before importing `sentinelx` so they never spend free-tier quota — keep it that way. Every output carries a
   `[AI GENERATED]` / `[TEMPLATE]` label. Analysis results must never depend on the LLM.
 - **Every report states its blind spots.** `evasion.py` maps detected evasion techniques to explicit
-  statements about what static analysis could not see for that specific sample.
+  statements about what static analysis could not see for that specific sample. When a detonation
+  closes one, `dynamic/behaviours.py` records it — but only for spots static actually flagged on
+  *that* sample, otherwise the report claims to have resolved blind spots it never had.
 
 ## Gotchas
 
@@ -106,13 +129,21 @@ intended, documented behaviour and is asserted in the tests.
   "Not enough horizontal space to render a single character".
 - **fpdf2 core fonts are latin-1 only** — all report text goes through `report._clean()`.
 - `scripts/make_demo.py` re-runs the *real* analysis modules over a crafted permission profile
-  (only APK parsing is substituted), so demo cases go stale whenever scoring logic changes.
+  (only APK parsing is substituted), so demo cases go stale whenever scoring logic changes. The
+  trojan demo also carries crafted sandbox observations; the SMS-stealer demo deliberately has none,
+  so the dashboard shows both the executed and the not-executed state.
+- **The `mock` dynamic backend fabricates events** and labels every block it builds `SIMULATED RUN`.
+  Keep that label in `detail` — consumers surface it, and it is what stops a demo from reading as a
+  real observation.
+- **Play Store AVD images cannot be used for detonation.** They are production-signed, so `adb root`
+  is refused and frida-server never starts; `setup_dynamic.py` provisions a `google_apis` image.
 - The dashboard has no build step. It is plain HTML/JS served by FastAPI, with Chart.js and D3 from
   CDN, so it needs network access to render charts.
 
 ## Out of scope
 
-Dynamic sandbox execution, native `.so` analysis, reflection resolution, Neo4j/Celery/Redis, live
-VirusTotal, STIX 2.1, WebSockets, React, generalized overlay reconstruction, auth/multi-tenancy.
+Native `.so` disassembly, reflection resolution, Neo4j/Celery/Redis, live VirusTotal, STIX 2.1,
+WebSockets, React, generalized overlay reconstruction, auth/multi-tenancy. Detonation is synchronous
+by design — no job queue; it is a single-user local tool.
 These are named as "future" in `Final_md.md` deliberately — the honest scoping is part of the
 project's argument. Don't add them without the user asking.

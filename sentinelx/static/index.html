@@ -80,6 +80,10 @@
   .warn{background:rgba(255,201,60,.09);border:1px solid rgba(255,201,60,.3);color:#ffe08a}
   .err{background:rgba(255,77,94,.1);border:1px solid rgba(255,77,94,.35);color:#ffb3ba}
   pre.narr{white-space:pre-wrap;font-family:inherit;font-size:13px;margin:0;color:#cdd7e2}
+  .live{background:rgba(255,77,94,.09);border:1px solid rgba(255,77,94,.32);color:#ffc2c8}
+  .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:7px;
+       background:var(--crit);animation:pulse 1.2s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:.35}50%{opacity:1}}
   #graph{width:100%;height:330px}
   /* Chart.js with maintainAspectRatio:false sizes to its parent; the parent must have
      a fixed height or the chart and page grow without bound. */
@@ -100,7 +104,7 @@
 <main>
   <div class="drop" id="drop">
     <h2>Drop a suspicious <code>.apk</code> here</h2>
-    <p>Static analysis only — the sample is never executed.</p>
+    <p id="dropNote">Static analysis — the sample is parsed in memory, never executed.</p>
     <div class="row">
       <button id="pick">Choose file</button>
       <button class="ghost" id="demoBtn">Load demo case</button>
@@ -122,12 +126,18 @@ const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c =>
   ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 let charts = [];
+// The sample is never kept server-side, so detonation re-sends the same bytes.
+let lastFile = null, sandbox = {available:false, backend:'none'};
 
 fetch('/api/health').then(r=>r.json()).then(h=>{
   const m = h.model_metrics;
   $('#modelTag').textContent = m
     ? `model: XGBoost · F1 ${m.f1} · FPR ${m.false_positive_rate}`
     : 'model: not trained';
+  sandbox = {available: !!h.dynamic_available, backend: h.dynamic_backend || 'none'};
+  if (sandbox.available) $('#dropNote').innerHTML = 'Static analysis by default — the '
+    + 'sample is parsed in memory, never executed. Running it in the sandbox '
+    + `(<b>${esc(sandbox.backend)}</b>, network sinkholed) is an explicit, per-sample choice.`;
 }).catch(()=>{ $('#modelTag').textContent='backend offline'; });
 
 // ---- upload wiring ----
@@ -175,6 +185,7 @@ function setStatus(msg, isErr) {
 async function upload(f) {
   setStatus(`Analysing ${f.name} — unpacking, classifying, attributing…`);
   $('#results').classList.add('hidden');
+  lastFile = f;
   const fd = new FormData(); fd.append('file', f);
   try {
     const r = await fetch('/api/analyze', { method:'POST', body: fd });
@@ -184,6 +195,25 @@ async function upload(f) {
   } catch (err) { setStatus('Request failed: ' + err.message, true); }
 }
 
+// ---- dynamic analysis: the one action that runs the sample ----
+async function detonate() {
+  if (!lastFile) return setStatus('Re-upload the APK to run it — samples are never '
+                                  + 'stored on the server.', true);
+  const t0 = Date.now();
+  const tick = setInterval(() => setStatus(
+    `Running ${lastFile.name} in the sandbox — ${((Date.now()-t0)/1000).toFixed(0)}s `
+    + `elapsed. Network is sinkholed; nothing leaves this machine.`), 1000);
+  setStatus(`Running ${lastFile.name} in the sandbox…`);
+  const fd = new FormData(); fd.append('file', lastFile);
+  try {
+    const r = await fetch('/api/detonate', { method:'POST', body: fd });
+    const j = await r.json();
+    if (!r.ok) return setStatus(j.detail || 'Detonation failed', true);
+    render(j);
+  } catch (err) { setStatus('Request failed: ' + err.message, true); }
+  finally { clearInterval(tick); }
+}
+
 // ---- rendering ----
 function render(c) {
   $('#status').classList.add('hidden');
@@ -191,7 +221,9 @@ function render(c) {
 
   const risk = c.risk, cls = c.classification, fr = c.fraud,
         nar = c.narrative || {}, meta = nar.generation_metadata || {},
-        ev = c.evasion, at = c.attack, attr = c.attribution;
+        ev = c.evasion, at = c.attack, attr = c.attribution,
+        dyn = c.dynamic || {status:'SKIPPED'};
+  const dynRan = dyn.status === 'COMPLETED' || dyn.status === 'TIMEOUT';
   const sev = risk.severity;
   const sevColor = {CRITICAL:'#ff4d5e',HIGH:'#ff8c3b',MEDIUM:'#ffc93c',LOW:'#3fd68a'}[sev];
 
@@ -209,6 +241,9 @@ function render(c) {
         </div>
         <div class="spacer"></div>
         <div class="row" style="margin:0">
+          ${(sandbox.available && !dynRan && lastFile) ? `<button id="detonateBtn"
+            title="Executes the sample in an isolated sandbox with its network sinkholed"
+            >Run dynamic analysis</button>` : ''}
           <button onclick="location.href='/api/cases/${c.case_id}/report.pdf'">PDF report</button>
           <button class="ghost" onclick="location.href='/api/cases/${c.case_id}/iocs.json'">IOC JSON</button>
           <button class="ghost" onclick="location.href='/api/cases/${c.case_id}/iocs.csv'">IOC CSV</button>
@@ -216,7 +251,9 @@ function render(c) {
       </div>
     </div>
 
-    ${risk.ml_rule_disagreement?`<div class="card" style="margin-top:16px">
+    ${risk.dynamic_confirmed?`<div class="card" style="margin-top:16px">
+      <div class="banner live" style="margin:0"><b>Confirmed by execution</b><br>${esc(risk.reconciliation_note)}</div></div>`
+      :risk.ml_rule_disagreement?`<div class="card" style="margin-top:16px">
       <div class="banner warn" style="margin:0"><b>ML / rule disagreement</b><br>${esc(risk.reconciliation_note)}</div></div>`:''}
 
     <div class="grid g2">
@@ -289,6 +326,9 @@ function render(c) {
             ?' <small style="color:var(--dim)">(common in benign apps)</small>':''}</li>`).join('')}</ul>`:''}
         <h3 style="margin-top:16px">What static analysis could NOT see</h3>
         <ul class="clean">${ev.blind_spots.map(b=>`<li>${esc(b)}</li>`).join('')}</ul>
+        ${dynRan && dyn.blind_spots_resolved?.length?`<div class="banner live" style="margin:12px 0 0">
+          <b>Closed by running the sample</b><ul class="clean" style="margin-top:6px">${
+          dyn.blind_spots_resolved.map(r=>`<li>${esc(r.observed)}</li>`).join('')}</ul></div>`:''}
       </div>
 
       <div class="card"><h3>Sample &amp; indicators</h3>
@@ -305,6 +345,37 @@ function render(c) {
       </div>
     </div>
 
+    <div class="card"><h3>Dynamic analysis — what the sample actually did
+      ${dynRan?`<span class="pill ${dyn.behaviours?.length?'CRITICAL':'LOW'}">${
+        dyn.behaviours?.length||0} behaviours</span>`:''}</h3>
+      ${!dynRan?`<p style="color:var(--dim)">${esc(dyn.detail
+        || 'This sample has not been executed. Everything above is static evidence.')}</p>
+        ${sandbox.available&&lastFile?'<p style="color:var(--dim);margin-top:8px">Use '
+          +'<b>Run dynamic analysis</b> above to detonate it in the sandbox.</p>':''}`
+      :`<div class="kv" style="margin-bottom:12px">
+          <div>Sandbox</div><div>${esc(dyn.backend)} <small style="color:var(--dim)">${
+            esc(dyn.status)} · ${dyn.duration_seconds}s</small></div>
+          <div>SMS interception</div><div>${dyn.sms_intercepted?'<b style="color:var(--crit)">OBSERVED</b>':'not observed'}</div>
+          <div>Overlay drawn</div><div>${dyn.overlay_observed?'<b style="color:var(--crit)">OBSERVED</b>':'not observed'}</div>
+          <div>Accessibility used</div><div>${dyn.accessibility_used?'<b style="color:var(--crit)">OBSERVED</b>':'not observed'}</div>
+          <div>Code loaded at runtime</div><div>${dyn.dynamic_code_loading?.length
+            ?`<b style="color:var(--crit)">${dyn.dynamic_code_loading.length} payload(s)</b>`:'none'}</div>
+        </div>
+        ${dyn.backend==='mock'?`<div class="banner warn">${esc(dyn.detail)}</div>`:''}
+        ${dyn.behaviours?.length?dyn.behaviours.map(b=>`<span class="tech">
+          <b>${esc(b.mitre_id)}</b> ${esc(b.label)}<small>${esc(b.evidence)}</small></span>`).join('')
+          :`<p style="color:var(--dim)">The sample ran but performed no flagged action.
+            Trojans commonly stay dormant under emulation, so this does not clear it.</p>`}
+        ${dyn.network?.http_requests?.length?`<h3 style="margin-top:16px">Network — contained by the sinkhole,
+          nothing left this machine</h3>
+          <table><tr><th style="width:70px">Method</th><th>Host</th><th>Path</th></tr>${
+          dyn.network.http_requests.slice(0,10).map(r=>`<tr><td>${esc(r.method)}</td>
+            <td class="mono">${esc(r.host)}</td><td class="mono">${esc(r.path)}</td></tr>`).join('')}</table>`:''}
+        ${dyn.dynamic_code_loading?.length?`<h3 style="margin-top:16px">Code not present in the APK</h3>
+          <ul class="clean mono">${dyn.dynamic_code_loading.map(d=>`<li>${esc(d.loader)}: ${
+            esc(d.path_or_hash)}</li>`).join('')}</ul>`:''}`}
+    </div>
+
     <div class="card"><h3>CERT-In incident report (draft)</h3>
       <div class="banner ${meta.mode==='AI_GENERATED'?'ai':'warn'}">${esc(meta.label||'')}</div>
       <table>${Object.entries(nar.cert_in_draft||{}).map(([k,v])=>`<tr>
@@ -313,6 +384,7 @@ function render(c) {
     </div>`;
 
   $('#results').classList.remove('hidden');
+  const det = $('#detonateBtn'); if (det) det.onclick = detonate;
   drawShap(cls.shap_top_features);
   drawRisk(risk.decomposition);
   drawGraph(attr.graph);

@@ -349,3 +349,139 @@ def test_shared_test_key_is_not_attribution(monkeypatch):
                                    )[1] == "NONE"
     finally:
         certgraph._families_by_fingerprint.cache_clear()
+
+
+# --------------------------------------------------------------- dynamic
+# The suite never executes a sample: every test here uses the `mock` backend,
+# which returns scripted events, or builds a block by hand.
+def test_dynamic_is_opt_in_by_default():
+    from sentinelx import dynamic
+    block = dynamic.analyse(b"anything", "com.example.app")
+    assert block["status"] == "SKIPPED"
+    assert block["behaviours"] == []
+
+
+def test_unrequested_dynamic_block_has_every_key():
+    """Consumers read the block directly, so a skipped run must not be sparse."""
+    from sentinelx import dynamic
+    ran = dynamic.analyse(b"x", "com.example.app", backend="mock")
+    assert sorted(dynamic.schema.skipped()) == sorted(ran)
+
+
+def test_triage_refuses_to_upload_without_permission():
+    """Submitting to Triage publishes the sample; it must never be implicit."""
+    from sentinelx import dynamic
+    block = dynamic.analyse(b"x", "com.example.app", backend="triage")
+    assert block["status"] == "ERROR"
+    assert "public" in block["detail"].lower()
+
+
+def test_unknown_backend_errors_instead_of_raising():
+    from sentinelx import dynamic
+    assert dynamic.analyse(b"x", "p", backend="nope")["status"] == "ERROR"
+
+
+def test_behaviours_derived_from_observations():
+    from sentinelx import dynamic
+    ids = {b["id"] for b in
+           dynamic.analyse(b"x", "p", backend="mock")["behaviours"]}
+    assert {"sms_interception", "overlay_draw", "runtime_dex_load"} <= ids
+    for b in dynamic.analyse(b"x", "p", backend="mock")["behaviours"]:
+        assert b["evidence"] and b["mitre_id"]
+
+
+def test_network_alone_is_not_a_confirmation():
+    """Every app talks to the internet - C2 traffic escalates, never convicts."""
+    from sentinelx.dynamic import behaviours, schema
+    block = behaviours.enrich(schema.build(
+        "mock", "COMPLETED",
+        network={"http_requests": [{"method": "GET", "host": "a.example",
+                                    "path": "/"}]}))
+    assert [b["id"] for b in block["behaviours"]] == ["c2_contact"]
+    assert risk.dynamic_reasons(block) == []
+
+
+def test_dynamic_confirmation_overrides_benign_ml_verdict():
+    from sentinelx import dynamic
+    block = dynamic.analyse(b"x", "p", backend="mock")
+    r = risk.compute({"verdict": "BENIGN", "malicious_probability": 0.01,
+                      "confidence": 0.99}, fraud.analyse(BENIGN),
+                     {"confidence": "NONE"}, {"sophistication": "NONE"}, 1.0, block)
+    assert r["dynamic_confirmed"] is True
+    assert r["headline_verdict"] == "MALICIOUS (dynamically confirmed)"
+    assert r["severity"] == "CRITICAL"      # confirmed behaviour + C2 contact
+
+
+def test_dynamic_does_not_change_the_composite_score():
+    """Confirmation raises the floor; the 5 static weights stay comparable."""
+    from sentinelx import dynamic
+    cls = {"verdict": "BENIGN", "malicious_probability": 0.01, "confidence": 0.99}
+    f = fraud.analyse(BENIGN)
+    static = risk.compute(cls, f, {"confidence": "NONE"}, {"sophistication": "NONE"})
+    dyn = risk.compute(cls, f, {"confidence": "NONE"}, {"sophistication": "NONE"},
+                       1.0, dynamic.analyse(b"x", "p", backend="mock"))
+    assert static["composite_score"] == dyn["composite_score"]
+
+
+def test_quiet_run_never_lowers_the_static_verdict():
+    """A dormant trojan is the expected case, not an acquittal."""
+    from sentinelx.dynamic import behaviours, schema
+    quiet = behaviours.enrich(schema.build("mock", "COMPLETED"))
+    r = risk.compute({"verdict": "BENIGN", "malicious_probability": 0.02},
+                     fraud.analyse(TROJAN), {"confidence": "NONE"},
+                     {"sophistication": "NONE"}, 1.0, quiet)
+    assert r["dynamic_confirmed"] is False
+    assert r["ml_rule_disagreement"] is True     # the static override still stands
+    assert r["severity"] in ("MEDIUM", "HIGH", "CRITICAL")
+
+
+def test_blind_spots_only_resolved_when_static_flagged_them():
+    from sentinelx.dynamic import behaviours, schema
+    observed = {"dynamic_code_loading": [{"loader": "DexClassLoader",
+                                          "path_or_hash": "/x/p.jar"}]}
+    both = behaviours.enrich(schema.build("mock", "COMPLETED", **observed),
+                             {"dynamic_loading"})
+    assert [r["key"] for r in both["blind_spots_resolved"]] == ["dynamic_loading"]
+    none = behaviours.enrich(schema.build("mock", "COMPLETED", **observed), set())
+    assert none["blind_spots_resolved"] == []
+
+
+def test_runtime_iocs_are_labelled_as_dynamic():
+    from sentinelx import dynamic
+    case = {"signals": {"package": "p", "urls": [], "ips": []},
+            "hashes": {"sha256": "a" * 64}, "attribution": {"certificate": {},
+            "related_families": []}, "fraud": {"targeted_banks": []},
+            "classification": {"verdict": "BENIGN", "confidence": 0.9},
+            "risk": {"severity": "LOW"}, "attack": {"techniques": []},
+            "dynamic": dynamic.analyse(b"x", "p", backend="mock")}
+    bundle = iocs.build(case)
+    runtime = [c for c in bundle["indicators"]["c2_candidates"]
+               if c["extraction_method"].startswith("dynamic")]
+    assert runtime, "runtime-observed C2 endpoints must reach the IOC export"
+    assert bundle["indicators"]["dropped_payloads"]
+    assert ",dynamic" in iocs.to_csv(bundle)
+
+
+def test_genai_never_implies_a_run_that_did_not_happen():
+    from sentinelx import genai
+    facts = genai._dynamic_facts({"dynamic": {"status": "SKIPPED"}})
+    assert facts["executed"] is False
+    assert "NOT executed" in facts["note"]
+
+
+def test_grounding_accepts_attack_ids_seen_only_at_runtime():
+    from sentinelx import genai
+    bundle = {"sample_hashes": {"sha256": "a" * 64},
+              "attribution": {"related_families": [], "certificate_confidence": "NONE"},
+              "otp_interception": {"target_banks": []},
+              "attack_techniques": [],
+              "dynamic_analysis": {"behaviours": [{"mitre_id": "T1407",
+                                                   "label": "x", "evidence": "y"}]}}
+    out = {"cert_in_draft": {"sample_hash_sha256": "a" * 64,
+                             "malware_family": "not determined",
+                             "targeted_institutions": [], "attack_vectors": []},
+           "attack_chain_narrative": "Loaded code at runtime (T1407).",
+           "executive_summary": "", "key_findings": []}
+    assert genai.grounding_errors(out, bundle) == []
+    out["attack_chain_narrative"] = "Invented T1999."
+    assert genai.grounding_errors(out, bundle)

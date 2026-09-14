@@ -1,8 +1,8 @@
 {
-  "schema_version": 5,
+  "schema_version": 6,
   "case_id": "328d4d9f-ffff-58c9-ab90-f68d6b0f604c",
   "filename": "DEMO_banking_overlay_trojan.apk",
-  "analysed_at": "2026-09-14T05:15:43.534385+00:00",
+  "analysed_at": "2026-09-14T17:36:54.162382+00:00",
   "hashes": {
     "md5": "f0cdc9761a2e6ec86d5b792466f757f6",
     "sha1": "09c6afbdf9d149b0373c34494925b2723e9bbc8b",
@@ -208,15 +208,15 @@
     "graph": {
       "nodes": [
         {
-          "id": "SpyNote",
-          "kind": "family",
-          "label": "SpyNote",
-          "known": false
-        },
-        {
           "id": "77d107b98f8fd794061c5d8fe632e1e0fa7feaca4c602bff3cc9ec841eedd6bb",
           "kind": "sample",
           "label": "sample:77d107b98f",
+          "known": false
+        },
+        {
+          "id": "SpyNote",
+          "kind": "family",
+          "label": "SpyNote",
           "known": false
         },
         {
@@ -229,14 +229,14 @@
       ],
       "links": [
         {
-          "source": "SpyNote",
-          "target": "eff63390d372cbfc45e4a822181c521f4f15ecf389f70fec68d58a1495cd1e2a",
-          "relation": "ATTRIBUTED_TO"
-        },
-        {
           "source": "77d107b98f8fd794061c5d8fe632e1e0fa7feaca4c602bff3cc9ec841eedd6bb",
           "target": "eff63390d372cbfc45e4a822181c521f4f15ecf389f70fec68d58a1495cd1e2a",
           "relation": "SIGNED_BY"
+        },
+        {
+          "source": "SpyNote",
+          "target": "eff63390d372cbfc45e4a822181c521f4f15ecf389f70fec68d58a1495cd1e2a",
+          "relation": "ATTRIBUTED_TO"
         }
       ]
     },
@@ -491,17 +491,183 @@
       ]
     }
   },
+  "dynamic": {
+    "backend": "emulator",
+    "status": "COMPLETED",
+    "detail": "DEMO \u2014 crafted sandbox observations scored by the real behaviour rules; no sample was executed.",
+    "duration_seconds": 180.0,
+    "runtime_permissions_requested": [
+      "android.permission.RECEIVE_SMS",
+      "android.permission.READ_SMS"
+    ],
+    "api_calls": [
+      {
+        "class": "android.telephony.SmsMessage",
+        "method": "createFromPdu",
+        "args_summary": "incoming SMS PDU",
+        "count": 6
+      },
+      {
+        "class": "android.view.WindowManager",
+        "method": "addView",
+        "args_summary": "TYPE_APPLICATION_OVERLAY over com.sbi.lotusintouch",
+        "count": 3
+      },
+      {
+        "class": "android.telephony.TelephonyManager",
+        "method": "getDeviceId",
+        "args_summary": "",
+        "count": 2
+      },
+      {
+        "class": "dalvik.system.DexClassLoader",
+        "method": "<init>",
+        "args_summary": "files/upd.jar",
+        "count": 1
+      },
+      {
+        "class": "android.content.pm.PackageManager",
+        "method": "getInstalledPackages",
+        "args_summary": "",
+        "count": 1
+      }
+    ],
+    "network": {
+      "dns_queries": [
+        "c2-panel.example-demo.invalid",
+        "api.example-demo.invalid"
+      ],
+      "http_requests": [
+        {
+          "method": "POST",
+          "host": "c2-panel.example-demo.invalid",
+          "path": "/gate.php"
+        },
+        {
+          "method": "POST",
+          "host": "api.example-demo.invalid",
+          "path": "/bot/register"
+        },
+        {
+          "method": "GET",
+          "host": "c2-panel.example-demo.invalid",
+          "path": "/upd.jar"
+        }
+      ],
+      "contacted_ips": [
+        "185.199.110.153"
+      ]
+    },
+    "dynamic_code_loading": [
+      {
+        "loader": "DexClassLoader",
+        "path_or_hash": "/data/data/com.sbi.secure.update/files/upd.jar"
+      }
+    ],
+    "overlay_observed": true,
+    "accessibility_used": true,
+    "sms_intercepted": true,
+    "sms_sent": [
+      {
+        "to": "+910000000000",
+        "body_summary": "<forwarded OTP>"
+      }
+    ],
+    "behaviours": [
+      {
+        "id": "sms_interception",
+        "label": "Intercepted incoming SMS",
+        "mitre_id": "T1412",
+        "evidence": "android.telephony.SmsMessage.createFromPdu called 6x at runtime"
+      },
+      {
+        "id": "sms_sending",
+        "label": "Sent SMS without user action",
+        "mitre_id": "T1582",
+        "evidence": "1 SMS send(s) observed, first to +910000000000"
+      },
+      {
+        "id": "overlay_draw",
+        "label": "Drew a window over other apps",
+        "mitre_id": "T1417.002",
+        "evidence": "android.view.WindowManager.addView called 3x at runtime"
+      },
+      {
+        "id": "accessibility_abuse",
+        "label": "Used the accessibility service at runtime",
+        "mitre_id": "T1417",
+        "evidence": "accessibility events were consumed at runtime"
+      },
+      {
+        "id": "runtime_dex_load",
+        "label": "Loaded additional code at runtime",
+        "mitre_id": "T1407",
+        "evidence": "1 runtime class-loader call(s); DexClassLoader loaded /data/data/com.sbi.secure.update/files/upd.jar"
+      },
+      {
+        "id": "c2_contact",
+        "label": "Contacted a command-and-control endpoint",
+        "mitre_id": "T1437",
+        "evidence": "3 HTTP request(s) at runtime, first to c2-panel.example-demo.invalid"
+      },
+      {
+        "id": "device_fingerprinting",
+        "label": "Read device identifiers",
+        "mitre_id": "T1426",
+        "evidence": "android.telephony.TelephonyManager.getDeviceId called 2x at runtime"
+      },
+      {
+        "id": "package_enumeration",
+        "label": "Enumerated installed applications",
+        "mitre_id": "T1418",
+        "evidence": "android.content.pm.PackageManager.getInstalledPackages called 1x at runtime"
+      }
+    ],
+    "blind_spots_resolved": [
+      {
+        "key": "dynamic_loading",
+        "observed": "the runtime-loaded payload was observed being loaded"
+      },
+      {
+        "key": "crypto",
+        "observed": "C2 endpoints were recovered at runtime, after decryption"
+      },
+      {
+        "key": "reflection",
+        "observed": "API calls were hooked at the framework level, so reflection did not conceal them"
+      }
+    ],
+    "observation_counts": {
+      "api_calls": 5,
+      "http_requests": 3,
+      "dns_queries": 2,
+      "dynamic_code_loading": 1,
+      "sms_sent": 1
+    },
+    "artifacts": {
+      "logcat_lines": 1174,
+      "pcap_captured": true
+    }
+  },
   "risk": {
-    "headline_verdict": "SUSPICIOUS (rule-driven)",
+    "headline_verdict": "MALICIOUS (dynamically confirmed)",
     "ml_rule_disagreement": true,
     "override_reasons": [
       "the banking-trojan capability kit (accessibility service + device admin + SMS interception)",
       "Indian bank apps referenced in the code or manifest"
     ],
-    "reconciliation_note": "The ML classifier scored this sample BENIGN, but the deterministic banking-fraud rules found the banking-trojan capability kit (accessibility service + device admin + SMS interception) and Indian bank apps referenced in the code or manifest. BIND_ACCESSIBILITY_SERVICE, BIND_NOTIFICATION_LISTENER_SERVICE and BIND_DEVICE_ADMIN are outside the model's training vocabulary, so the rule engine is the more reliable signal here. Severity is raised to at least MEDIUM so a known-blind model cannot bury the finding.",
+    "dynamic_confirmed": true,
+    "dynamic_reasons": [
+      "intercepted incoming SMS",
+      "sent SMS without user interaction",
+      "drew a window on top of other apps",
+      "drove the device through the accessibility service",
+      "loaded code that is not present in the APK"
+    ],
+    "reconciliation_note": "Executed in the sandbox, the sample intercepted incoming SMS, sent SMS without user interaction, drew a window on top of other apps, drove the device through the accessibility service, loaded code that is not present in the APK and contacted its command-and-control endpoint. Observed behaviour outranks the permission model and the static rules, so severity is floored at CRITICAL.",
     "composite_score": 62.91,
-    "severity": "HIGH",
-    "severity_floor_applied": false,
+    "severity": "CRITICAL",
+    "severity_floor_applied": true,
     "decomposition": [
       {
         "signal": "ml_confidence",
@@ -535,18 +701,18 @@
       }
     ],
     "completeness_factor": 1.0,
-    "recommended_response": "Expedited investigation and stakeholder notification"
+    "recommended_response": "Immediate containment and CERT-In notification recommended"
   },
   "cache_hit": false,
   "narrative": {
-    "executive_summary": "Verdict: SUSPICIOUS (rule-driven). The ML classifier alone said BENIGN at 99%; the banking-fraud rules overruled it. The sample carries a composite risk score of 62.91 (HIGH). OTP-interception risk is rated HIGH. Targeting analysis identifies ICICI iMobile Pay, SBI YONO, HDFC MobileBanking, Paytm. Certificate attribution: SpyNote. 16 MITRE ATT&CK for Mobile techniques were mapped from static evidence. Recommended response: HIGH handling.",
-    "attack_chain_narrative": "Reconstructed attack chain from static evidence:\n  - [T1412] Capture SMS Messages \u2014 evidence: READ_SMS + RECEIVE_SMS declared\n  - [T1417] Input Capture \u2014 evidence: Accessibility service binding declared\n  - [T1418] Software Discovery \u2014 evidence: Enumerates installed packages\n  - [T1416] Input Injection \u2014 evidence: Draw-over-other-apps (overlay) permission\n  - [T1401] Device Administrator Permissions \u2014 evidence: Device admin binding declared\n  - [T1474] Supply Chain Compromise \u2014 evidence: Can install further packages (dropper)\n  - [T1437] Application Layer Protocol \u2014 evidence: Network access declared\n  - [T1429] Audio Capture \u2014 evidence: Microphone access declared\n  - [T1512] Video Capture \u2014 evidence: Camera access declared\n  - [T1433] Access Call Log \u2014 evidence: Call log access declared\n  - [T1430] Location Tracking \u2014 evidence: Fine location access declared\n  - [T1636] Protected User Data: Contacts \u2014 evidence: Contact list access declared\n  - [T1409] Stored Application Data \u2014 evidence: External storage read access\n  - [T1624] Event Triggered Execution \u2014 evidence: Auto-start on device boot\n  - [T1541] Foreground Persistence \u2014 evidence: Persistent foreground service\n  - [T1417.002] GUI Input Capture \u2014 evidence: Overlay permission combined with Indian banking app targeting",
+    "executive_summary": "Verdict: MALICIOUS (dynamically confirmed). The ML classifier alone said BENIGN at 99%; the banking-fraud rules overruled it. Executed in the sandbox, the sample intercepted incoming SMS, sent SMS without user interaction, drew a window on top of other apps, drove the device through the accessibility service, loaded code that is not present in the APK, which confirms the static findings by observation rather than inference. The sample carries a composite risk score of 62.91 (CRITICAL). OTP-interception risk is rated HIGH. Targeting analysis identifies ICICI iMobile Pay, SBI YONO, HDFC MobileBanking, Paytm. Certificate attribution: SpyNote. 16 MITRE ATT&CK for Mobile techniques were mapped from static evidence. Recommended response: CRITICAL handling.",
+    "attack_chain_narrative": "Reconstructed attack chain from static evidence:\n  - [T1412] Capture SMS Messages \u2014 evidence: READ_SMS + RECEIVE_SMS declared\n  - [T1417] Input Capture \u2014 evidence: Accessibility service binding declared\n  - [T1418] Software Discovery \u2014 evidence: Enumerates installed packages\n  - [T1416] Input Injection \u2014 evidence: Draw-over-other-apps (overlay) permission\n  - [T1401] Device Administrator Permissions \u2014 evidence: Device admin binding declared\n  - [T1474] Supply Chain Compromise \u2014 evidence: Can install further packages (dropper)\n  - [T1437] Application Layer Protocol \u2014 evidence: Network access declared\n  - [T1429] Audio Capture \u2014 evidence: Microphone access declared\n  - [T1512] Video Capture \u2014 evidence: Camera access declared\n  - [T1433] Access Call Log \u2014 evidence: Call log access declared\n  - [T1430] Location Tracking \u2014 evidence: Fine location access declared\n  - [T1636] Protected User Data: Contacts \u2014 evidence: Contact list access declared\n  - [T1409] Stored Application Data \u2014 evidence: External storage read access\n  - [T1624] Event Triggered Execution \u2014 evidence: Auto-start on device boot\n  - [T1541] Foreground Persistence \u2014 evidence: Persistent foreground service\n  - [T1417.002] GUI Input Capture \u2014 evidence: Overlay permission combined with Indian banking app targeting\n\nObserved during sandbox execution:\n  - [T1412] Intercepted incoming SMS \u2014 android.telephony.SmsMessage.createFromPdu called 6x at runtime\n  - [T1582] Sent SMS without user action \u2014 1 SMS send(s) observed, first to +910000000000\n  - [T1417.002] Drew a window over other apps \u2014 android.view.WindowManager.addView called 3x at runtime\n  - [T1417] Used the accessibility service at runtime \u2014 accessibility events were consumed at runtime\n  - [T1407] Loaded additional code at runtime \u2014 1 runtime class-loader call(s); DexClassLoader loaded /data/data/com.sbi.secure.update/files/upd.jar\n  - [T1437] Contacted a command-and-control endpoint \u2014 3 HTTP request(s) at runtime, first to c2-panel.example-demo.invalid\n  - [T1426] Read device identifiers \u2014 android.telephony.TelephonyManager.getDeviceId called 2x at runtime\n  - [T1418] Enumerated installed applications \u2014 android.content.pm.PackageManager.getInstalledPackages called 1x at runtime",
     "key_findings": [
-      "Verdict SUSPICIOUS (rule-driven) (ML label BENIGN at 99% calibrated confidence)",
+      "Verdict MALICIOUS (dynamically confirmed) (ML label BENIGN at 99% calibrated confidence)",
+      "Observed at runtime: Intercepted incoming SMS; Sent SMS without user action; Drew a window over other apps",
       "OTP interception risk HIGH: Banking-trojan capability kit: accessibility service + device admin + SMS interception declared together; Accessibility abuse: BIND_ACCESSIBILITY_SERVICE; Device admin: BIND_DEVICE_ADMIN",
       "Indian banking apps targeted: ICICI iMobile Pay, SBI YONO, HDFC MobileBanking, Paytm",
-      "Evasion: Emulator fingerprint checks, Debugger detection, Reflection-based API concealment",
-      "ATT&CK techniques mapped: T1412, T1417, T1418, T1416, T1401, T1474, T1437, T1429, T1512, T1433, T1430, T1636, T1409, T1624, T1541, T1417.002"
+      "Evasion: Emulator fingerprint checks, Debugger detection, Reflection-based API concealment"
     ],
     "recommended_actions": [
       "Block the listed IOCs (package name, certificate fingerprint, any C2 hosts) at the mobile-threat and network perimeter.",
@@ -555,10 +721,10 @@
       "File the CERT-In notification below if the sample is novel or widespread."
     ],
     "cert_in_draft": {
-      "incident_title": "Android banking trojan sample \u2014 HIGH severity",
+      "incident_title": "Android banking trojan sample \u2014 CRITICAL severity",
       "incident_category": "Malware",
       "affected_sector": "BFSI",
-      "severity": "HIGH",
+      "severity": "CRITICAL",
       "sample_hash_sha256": "77d107b98f8fd794061c5d8fe632e1e0fa7feaca4c602bff3cc9ec841eedd6bb",
       "malware_family": "SpyNote",
       "targeted_institutions": [
@@ -590,7 +756,7 @@
         "Customer advisory on overlay phishing and OTP disclosure",
         "Monitor for transactions correlated with these indicators"
       ],
-      "reporting_urgency": "EXPEDITED",
+      "reporting_urgency": "IMMEDIATE",
       "reporting_institution": "[ANALYST TO COMPLETE]",
       "analyst_review_note": "DRAFT \u2014 verify all fields and IOCs before submission."
     },
@@ -609,13 +775,79 @@
       },
       "package": "com.sbi.secure.update",
       "verdict": {
-        "headline": "SUSPICIOUS (rule-driven)",
+        "headline": "MALICIOUS (dynamically confirmed)",
         "ml_label": "BENIGN",
         "ml_confidence": 0.9882,
         "ml_rule_disagreement": true,
         "rule_override_reasons": [
           "the banking-trojan capability kit (accessibility service + device admin + SMS interception)",
           "Indian bank apps referenced in the code or manifest"
+        ],
+        "dynamic_confirmed": true,
+        "dynamic_reasons": [
+          "intercepted incoming SMS",
+          "sent SMS without user interaction",
+          "drew a window on top of other apps",
+          "drove the device through the accessibility service",
+          "loaded code that is not present in the APK"
+        ]
+      },
+      "dynamic_analysis": {
+        "executed": true,
+        "sandbox": "emulator",
+        "simulated": false,
+        "behaviours": [
+          {
+            "label": "Intercepted incoming SMS",
+            "mitre_id": "T1412",
+            "evidence": "android.telephony.SmsMessage.createFromPdu called 6x at runtime"
+          },
+          {
+            "label": "Sent SMS without user action",
+            "mitre_id": "T1582",
+            "evidence": "1 SMS send(s) observed, first to +910000000000"
+          },
+          {
+            "label": "Drew a window over other apps",
+            "mitre_id": "T1417.002",
+            "evidence": "android.view.WindowManager.addView called 3x at runtime"
+          },
+          {
+            "label": "Used the accessibility service at runtime",
+            "mitre_id": "T1417",
+            "evidence": "accessibility events were consumed at runtime"
+          },
+          {
+            "label": "Loaded additional code at runtime",
+            "mitre_id": "T1407",
+            "evidence": "1 runtime class-loader call(s); DexClassLoader loaded /data/data/com.sbi.secure.update/files/upd.jar"
+          },
+          {
+            "label": "Contacted a command-and-control endpoint",
+            "mitre_id": "T1437",
+            "evidence": "3 HTTP request(s) at runtime, first to c2-panel.example-demo.invalid"
+          },
+          {
+            "label": "Read device identifiers",
+            "mitre_id": "T1426",
+            "evidence": "android.telephony.TelephonyManager.getDeviceId called 2x at runtime"
+          },
+          {
+            "label": "Enumerated installed applications",
+            "mitre_id": "T1418",
+            "evidence": "android.content.pm.PackageManager.getInstalledPackages called 1x at runtime"
+          }
+        ],
+        "hosts_contacted": [
+          "c2-panel.example-demo.invalid",
+          "api.example-demo.invalid",
+          "c2-panel.example-demo.invalid"
+        ],
+        "runtime_code_loading": true,
+        "blind_spots_closed": [
+          "dynamic_loading",
+          "crypto",
+          "reflection"
         ]
       },
       "banking_trojan_kit": {
@@ -818,7 +1050,7 @@
       },
       "risk_score": {
         "composite": 62.91,
-        "severity": "HIGH"
+        "severity": "CRITICAL"
       }
     }
   }

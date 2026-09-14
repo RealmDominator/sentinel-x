@@ -17,6 +17,38 @@ WEIGHTS = {
 ATTRIBUTION_VALUE = {"HIGH": 1.0, "MEDIUM": 0.65, "LOW": 0.35, "NONE": 0.1}
 EVASION_VALUE = {"HIGH": 1.0, "MEDIUM": 0.65, "LOW": 0.3, "NONE": 0.0}
 
+SEVERITY_ORDER = ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
+
+# Behaviours that only a malicious app performs, phrased for the reconciliation note.
+# Network contact is deliberately absent: every app talks to the internet, so C2
+# traffic escalates a confirmed finding but never creates one on its own.
+CONFIRMING_BEHAVIOURS = {
+    "sms_interception": "intercepted incoming SMS",
+    "sms_sending": "sent SMS without user interaction",
+    "overlay_draw": "drew a window on top of other apps",
+    "accessibility_abuse": "drove the device through the accessibility service",
+    "runtime_dex_load": "loaded code that is not present in the APK",
+    "command_execution": "executed a shell command",
+}
+
+
+def _at_least(severity: str, floor: str) -> str:
+    return max(severity, floor, key=SEVERITY_ORDER.index)
+
+
+def dynamic_reasons(dynamic: dict[str, Any] | None) -> list[str]:
+    """Runtime behaviours strong enough to confirm a verdict on their own.
+
+    Static rules infer intent from declared capability; these are observations of
+    the sample actually doing it, so they outrank both the ML score and the
+    static rules. An empty list is NOT evidence of innocence - a trojan that
+    detects the emulator simply sits still - so nothing here ever lowers a score.
+    """
+    if not dynamic or dynamic.get("status") not in ("COMPLETED", "TIMEOUT"):
+        return []
+    observed = {b.get("id") for b in dynamic.get("behaviours", [])}
+    return [label for key, label in CONFIRMING_BEHAVIOURS.items() if key in observed]
+
 
 def override_reasons(fraud: dict[str, Any], evasion: dict[str, Any]) -> list[str]:
     """Rule findings strong enough to overrule a BENIGN ML verdict.
@@ -52,7 +84,8 @@ def override_reasons(fraud: dict[str, Any], evasion: dict[str, Any]) -> list[str
 
 def compute(classification: dict[str, Any], fraud: dict[str, Any],
             cert: dict[str, Any], evasion: dict[str, Any],
-            completeness: float = 1.0) -> dict[str, Any]:
+            completeness: float = 1.0,
+            dynamic: dict[str, Any] | None = None) -> dict[str, Any]:
     ml = classification.get("malicious_probability", 0.0) * completeness
     fraud_norm = min(fraud.get("fraud_signal_score", 0)
                      / max(fraud.get("fraud_signal_max", 9), 1), 1.0)
@@ -114,10 +147,36 @@ def compute(classification: dict[str, Any], fraud: dict[str, Any],
         headline = classification.get("verdict", "UNKNOWN")
         note = ""
 
+    # --- Dynamic confirmation ---------------------------------------------
+    # Observed execution outranks both the model and the static rules: this is
+    # the sample doing the thing, not the manifest saying it could. The composite
+    # weights are deliberately left alone so static scores stay comparable across
+    # the evaluation sets - confirmation raises the floor instead of the sum.
+    dyn_reasons = dynamic_reasons(dynamic)
+    dyn = dynamic or {}
+    dynamic_ran = dyn.get("status") in ("COMPLETED", "TIMEOUT")
+    if dyn_reasons:
+        headline = "MALICIOUS (dynamically confirmed)"
+        exfil = any(b.get("id") == "c2_contact" for b in dyn.get("behaviours", []))
+        floor = "CRITICAL" if exfil else "HIGH"
+        if severity != (raised := _at_least(severity, floor)):
+            severity, severity_floor_applied = raised, True
+        note = (f"Executed in the sandbox, the sample {', '.join(dyn_reasons)}"
+                + (" and contacted its command-and-control endpoint" if exfil else "")
+                + ". Observed behaviour outranks the permission model and the static "
+                  f"rules, so severity is floored at {floor}.")
+    elif dynamic_ran and not note:
+        note = ("The sample was executed in the sandbox and no malicious behaviour "
+                "was observed. This is not a clean bill of health: banking trojans "
+                "commonly stay dormant when they detect an emulator, and the static "
+                "verdict above stands on its own evidence.")
+
     return {
         "headline_verdict": headline,
         "ml_rule_disagreement": disagreement,
         "override_reasons": reasons if disagreement else [],
+        "dynamic_confirmed": bool(dyn_reasons),
+        "dynamic_reasons": dyn_reasons,
         "reconciliation_note": note,
         "composite_score": composite,
         "severity": severity,

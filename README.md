@@ -1,8 +1,12 @@
 # SENTINEL-X
 
-**Android banking-malware static analysis & intelligence platform.**
+**Android banking-malware analysis & intelligence platform.**
 Drop in a suspicious `.apk` → get an explainable verdict, attribution, MITRE ATT&CK chain,
-a composite risk score, IOCs and a PDF intelligence report. The sample is **never executed**.
+a composite risk score, IOCs and a PDF intelligence report.
+
+Static by default: the sample is parsed in memory and **not executed**. Running it is a separate,
+explicit choice — an optional sandbox detonates it with its network sinkholed and adds what it
+actually *did* to the same case ([Dynamic analysis](#dynamic-analysis-optional)).
 
 The full solution specification is in **[`Final_md.md`](Final_md.md)**.
 
@@ -21,7 +25,7 @@ Then either click **Load demo case**, or drag a real `.apk` onto the drop zone.
 Run the tests:
 
 ```bash
-python -m pytest tests/ -q       # 50 tests (19 run end-to-end on real benign APKs)
+python -m pytest tests/ -q       # 63 tests (19 run end-to-end on real benign APKs)
 ```
 
 ## Measured on real malware
@@ -54,6 +58,7 @@ caveats: [`Final_md.md` §9b](Final_md.md).
 | GenAI narrative + CERT-In draft | working (template mode; live LLM optional) |
 | PDF report, IOC JSON/CSV export | working |
 | Dashboard (upload, SHAP chart, risk chart, cert graph, ATT&CK grid) | working |
+| Sandbox detonation + runtime behaviour, sinkholed network | working — optional, off by default |
 
 Verified end-to-end against two real APKs downloaded from F-Droid (kept in `samples/`).
 To re-verify after any change:
@@ -62,6 +67,45 @@ To re-verify after any change:
 python -m pytest tests/ -q
 curl -F "file=@samples/fdroid_privacybrowser.apk" http://127.0.0.1:8000/api/analyze
 ```
+
+---
+
+## Dynamic analysis (optional)
+
+Static analysis reads what an app *declares*. Detonation shows what it *does* — which is the only
+way past a packed or string-encrypted trojan whose C2 URL never appears in its DEX.
+
+**It is off by default.** Set a backend in `.env`, and even then nothing runs unless you ask:
+
+```bash
+# See the feature with no emulator and no malware — scripted events, labelled as simulated
+SENTINELX_DYNAMIC_BACKEND=mock python -m uvicorn sentinelx.app:app
+
+# Real local detonation: one-time provisioning, then click "Run dynamic analysis"
+python scripts/setup_dynamic.py --install     # creates a rooted google_apis AVD + frida-server
+# then set SENTINELX_DYNAMIC_BACKEND=emulator in .env
+```
+
+**How it is contained.** The emulator boots throwaway (`-wipe-data -no-snapshot-save`) with its DNS
+pointed at a local sinkhole that answers *every* lookup with the host loopback, so the sample
+behaves as if online — which is what makes it act — while nothing reaches the internet. What it
+tried to exfiltrate is written down instead of delivered. The APK touches disk once, outside
+OneDrive, because `adb install` needs a path, and is deleted in a `finally`.
+
+Frida hooks the framework methods that matter (`SmsManager`, `WindowManager.addView`,
+`DexClassLoader`, `HttpURLConnection`, accessibility, `Runtime.exec`). Hooking there is what
+defeats the sample's own concealment: reflection, runtime decryption and packing all have to
+resolve to those same APIs, and network calls are seen **before** TLS, so certificate pinning does
+not hide the C2 URL.
+
+**How it changes the verdict.** Observed behaviour outranks both the model and the static rules, so
+the headline becomes `MALICIOUS (dynamically confirmed)` and severity is floored (CRITICAL when C2
+contact accompanies it). The five static weights are **not** re-weighted — composite scores stay
+comparable with every earlier evaluation. Network traffic alone never confirms anything; every app
+talks to the internet.
+
+`scripts/real_world_eval.py --bazaar --dynamic` pulls behaviour from Hatching Triage for the
+MalwareBazaar samples (already public). Uploading a user's own file there is refused by design.
 
 ---
 
@@ -81,8 +125,11 @@ These are real and are stated in the report output, not hidden:
 3. **The model carries a temporal bias from its corpus.** `REQUEST_INSTALL_PACKAGES` and
    `FOREGROUND_SERVICE` push *benign* because NATICUSdroid's benign half is more modern.
    SHAP surfaces this; the composite score does not rely on the model alone.
-4. **Static only.** No sandbox, no native `.so` analysis, no reflection resolution. Every report
-   names what it could not see for that specific sample.
+4. **Static by default; dynamic is opt-in and shallow.** Every report names what static analysis
+   could not see for that specific sample. A detonation closes some of those gaps but adds its own:
+   a ~3-minute window driven by `monkey` reaches only shallow UI states, trojans that fingerprint
+   emulators stay dormant, and no native `.so` is disassembled. **A quiet run is not an acquittal**,
+   and the scoring treats it that way — confirmation can only raise severity, never lower it.
 5. **Prototype scope.** No auth, no multi-tenancy, single-process, SQLite-free JSON cache.
 
 ---
@@ -104,9 +151,17 @@ sentinelx/             the application
   genai.py             narrative + CERT-In draft (template / live LLM)
   report.py            PDF report
   iocs.py              IOC JSON/CSV export
+  dynamic/             sandbox execution (the only code that runs a sample)
+    schema.py          the normalized dynamic block — one shape per backend
+    behaviours.py      observations -> behaviour signatures + blind spots closed
+    emulator.py        throwaway rooted AVD + Frida, DNS forced to the sinkhole
+    sinkhole.py        fake DNS + HTTP: C2 traffic is recorded, never delivered
+    triage.py          Hatching Triage (public samples only)
+    mock.py            scripted events for tests and demos
   static/index.html    dashboard
 scripts/
   setup.py             one-command bootstrap
+  setup_dynamic.py     provision the detonation AVD + frida-server
   train_model.py       download dataset, train, calibrate, emit metrics
   make_demo.py         build demo cases
   fetch_cert_corpus.py load real certificate data (needs API key)

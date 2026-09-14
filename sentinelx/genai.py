@@ -30,6 +30,10 @@ family names, or attribution.
 - verdict.headline is the platform's verdict. If verdict.ml_rule_disagreement is true, say the \
 ML model was overruled by the rules and why (verdict.rule_override_reasons); never present the \
 ML label as the final verdict.
+- dynamic_analysis.executed distinguishes what the sample DID from what it COULD do. When it \
+is false, never write that anything was observed, seen, or confirmed at runtime. When it is \
+true, attribute those findings to sandbox execution, and if dynamic_analysis.simulated is true \
+say the run was simulated.
 - Respond with valid JSON matching the requested schema, nothing else."""
 
 OUTPUT_SCHEMA = {
@@ -52,6 +56,28 @@ OUTPUT_SCHEMA = {
 }
 
 
+def _dynamic_facts(case: dict[str, Any]) -> dict[str, Any]:
+    """Runtime observations, or an explicit 'not executed' so the model cannot imply one."""
+    dyn = case.get("dynamic") or {}
+    if dyn.get("status") not in ("COMPLETED", "TIMEOUT"):
+        return {"executed": False,
+                "note": "This sample was NOT executed. Describe static evidence only "
+                        "and never imply runtime observation."}
+    net = dyn.get("network", {})
+    return {
+        "executed": True,
+        "sandbox": dyn.get("backend", ""),
+        "simulated": dyn.get("backend") == "mock",
+        "behaviours": [{"label": b.get("label"), "mitre_id": b.get("mitre_id"),
+                        "evidence": b.get("evidence")}
+                       for b in dyn.get("behaviours", [])],
+        "hosts_contacted": [r.get("host") for r in net.get("http_requests", [])
+                            if r.get("host")] or net.get("dns_queries", []),
+        "runtime_code_loading": bool(dyn.get("dynamic_code_loading")),
+        "blind_spots_closed": [r.get("key") for r in dyn.get("blind_spots_resolved", [])],
+    }
+
+
 def build_bundle(case: dict[str, Any]) -> dict[str, Any]:
     """The structured, verified input the model is allowed to see."""
     return {
@@ -64,7 +90,10 @@ def build_bundle(case: dict[str, Any]) -> dict[str, Any]:
             "ml_confidence": case["classification"]["confidence"],
             "ml_rule_disagreement": case["risk"].get("ml_rule_disagreement", False),
             "rule_override_reasons": case["risk"].get("override_reasons", []),
+            "dynamic_confirmed": case["risk"].get("dynamic_confirmed", False),
+            "dynamic_reasons": case["risk"].get("dynamic_reasons", []),
         },
+        "dynamic_analysis": _dynamic_facts(case),
         "banking_trojan_kit": {
             "complete": case["fraud"].get("trojan_kit_complete", False),
             "overlay_kit_without_admin": case["fraud"].get("overlay_kit_without_admin", False),
@@ -109,11 +138,20 @@ def _template(bundle: dict[str, Any]) -> dict[str, Any]:
     fam_txt = ", ".join(fam) if (fam and high) else "not determined"
     tech_ids = ", ".join(t["id"] for t in techs) if techs else "none mapped"
 
+    dyn = bundle.get("dynamic_analysis", {})
     ml_txt = (f"The ML classifier alone said {v['ml_label']} at {v['ml_confidence']:.0%}; "
               "the banking-fraud rules overruled it. "
               if v["ml_rule_disagreement"] else "")
+    dyn_txt = ""
+    if v.get("dynamic_confirmed"):
+        dyn_txt = ("Executed in the sandbox, the sample "
+                   + ", ".join(v.get("dynamic_reasons", [])) + ", which confirms the "
+                   "static findings by observation rather than inference. ")
+    elif dyn.get("executed"):
+        dyn_txt = ("The sample was executed in the sandbox and performed no flagged "
+                   "action; dormancy under emulation is itself common trojan behaviour. ")
     summary = (
-        f"Verdict: {v['headline']}. {ml_txt}"
+        f"Verdict: {v['headline']}. {ml_txt}{dyn_txt}"
         f"The sample carries a composite risk score of {risk['composite']} "
         f"({risk['severity']}). OTP-interception risk is rated {otp['risk']}. "
         f"Targeting analysis identifies {bank_txt}. Certificate attribution: {fam_txt}. "
@@ -127,9 +165,16 @@ def _template(bundle: dict[str, Any]) -> dict[str, Any]:
         + "\n  - ".join(chain_bits) if chain_bits
         else "No ATT&CK techniques were mapped from the available static evidence."
     )
+    if dyn.get("behaviours"):
+        narrative += ("\n\nObserved during sandbox execution:\n  - " + "\n  - ".join(
+            f"[{b['mitre_id']}] {b['label']} — {b['evidence']}"
+            for b in dyn["behaviours"]))
 
     findings = [f"Verdict {v['headline']} (ML label {v['ml_label']} at "
                 f"{v['ml_confidence']:.0%} calibrated confidence)"]
+    if dyn.get("behaviours"):
+        findings.append("Observed at runtime: "
+                        + "; ".join(b["label"] for b in dyn["behaviours"][:3]))
     if otp["risk"] in ("HIGH", "MEDIUM"):
         findings.append(f"OTP interception risk {otp['risk']}: "
                         + "; ".join(otp["signals"][:3]))
@@ -237,7 +282,12 @@ def grounding_errors(out: dict[str, Any], bundle: dict[str, Any]) -> list[str]:
         if low != "not determined" and not any(b in low or low in b for b in banks):
             errors.append(f"targeted institution '{inst}' was not detected")
 
+    # Techniques mapped from declared permissions, plus any observed during
+    # execution — behaviours legitimately cite IDs the static mapping never had.
     allowed = {t["id"] for t in bundle["attack_techniques"]}
+    allowed |= {b.get("mitre_id") for b
+                in bundle.get("dynamic_analysis", {}).get("behaviours", [])}
+    allowed.discard(None)
     text = " ".join([out.get("attack_chain_narrative", ""),
                      out.get("executive_summary", ""),
                      *out.get("key_findings", []), *draft.get("attack_vectors", [])])

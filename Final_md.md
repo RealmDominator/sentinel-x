@@ -20,7 +20,8 @@ OTP SMS**. Tools available to bank SOC / CERT-In teams (VirusTotal, MobSF) answe
 **SENTINEL-X** takes a suspicious `.apk`, runs a **static** analysis pipeline, and produces a structured
 intelligence report in seconds: an **explainable ML verdict (XGBoost + SHAP)**, **certificate-based
 attribution**, **OTP-interception / bank-targeting detection**, **MITRE ATT&CK mapping**, a **composite risk
-score**, and a **Generative-AI narrative + CERT-In incident-report draft**. No malware is executed.
+score**, and a **Generative-AI narrative + CERT-In incident-report draft**. Nothing is executed unless
+an analyst explicitly asks for a sandbox run (§8a), which is contained and off by default.
 
 This document describes a version that is **actually built and runnable on a normal laptop** — every
 technology choice is one a solo beginner can install and operate, and the ML model is trained on a **real,
@@ -55,11 +56,16 @@ free, balanced dataset** so its metrics are genuine rather than claimed.
   GET /api/cases/{id}  ◀───── case JSON ─────────┤                                  │
   GET .../report.pdf   ◀───── fpdf2 PDF ─────────┤  cache: data/cases/{sha256}.json │
   GET .../iocs.{json,csv} ◀── IOC export ────────┘                                  │
+                 │                                                                  │
+                 │  POST /api/detonate  ──▶ 7 Dynamic (opt-in, §8a) ──▶ re-score     │
+                 │        throwaway AVD + Frida │ DNS ──▶ local sinkhole (no egress) │
                  └───────────────────────────────────────────────────────────────┘
    models/  xgb.joblib · calibrator.joblib · feature_vocab.json · metrics.json
 ```
 
 Single process, single command to run. No React build, no database server, no message queue.
+The dynamic stage is a separate endpoint precisely because it is slow, optional, and the only
+thing here that runs the sample.
 
 ---
 
@@ -136,7 +142,7 @@ the right answer *and* shows its working — which is what an explainable-AI req
 
 ---
 
-## 6. Modules (7)
+## 6. Modules (8)
 
 1. **Ingestion** (`ingest.py`) — MIME/ZIP/size + compression-ratio (ZIP-bomb) checks, MD5/SHA1/SHA256,
    SHA256 cache lookup, `androguard.APK` load. Graceful `PARTIAL` degrade if parsing is incomplete.
@@ -152,9 +158,13 @@ the right answer *and* shows its working — which is what an explainable-AI req
    → CRITICAL (80–100) / HIGH (60–79) / MEDIUM (40–59) / LOW (0–39), fully decomposed. Also performs
    **ML/rule reconciliation**: when the classifier says benign but the fraud rules find OTP-interception
    capability or bank targeting, it flags the disagreement and issues a `SUSPICIOUS (rule-driven)` headline.
+   When a sandbox run confirms behaviour, that outranks both and floors severity (§8a).
 7. **GenAI narrative** (`genai.py`) — executive summary + attack-chain + **CERT-In draft**. Template engine
    by default (deterministic); live Anthropic call when a key is present. JSON-validated, `[AI GENERATED]` /
    `[TEMPLATE]` labeled, source data shown alongside.
+8. **Dynamic analysis** (`dynamic/`, optional — see §8a) — executes the sample in a contained sandbox and
+   normalizes what it did into behaviour signatures, runtime IOCs and the blind spots the run closed.
+   Off unless configured, opt-in per sample, and a failure here never costs the caller its static result.
 
 **Outputs:** HTML + `fpdf2` PDF report (`report.py`); JSON + CSV IOC export (`iocs.py`).
 
@@ -179,10 +189,50 @@ always demonstrable even with no sample APK or backend.
 
 ---
 
+## 8a. Dynamic analysis (optional second stage)
+
+Static analysis reads what an app **declares**; the blind-spot section above is the honest admission
+of where that runs out. Dynamic analysis closes part of that gap by observing what the sample
+**does**, and is the only way past a packed or string-encrypted trojan whose C2 never appears in
+its DEX.
+
+**Off by default, opt-in per sample.** `SENTINELX_DYNAMIC_BACKEND=none` unless configured, and even
+then a sample is executed only when explicitly requested (`/api/detonate`, `analyse(dynamic=...)`,
+`--dynamic`). The static path remains exactly as before: in memory, never executed.
+
+| Backend | What it is | When it is used |
+|---|---|---|
+| `emulator` | Throwaway rooted `google_apis` AVD + Frida, DNS forced to a local sinkhole | Uploads on this machine |
+| `triage` | Hatching Triage report by hash, uploading only if unseen | Evaluation over already-public MalwareBazaar samples; refused for user uploads |
+| `mock` | Scripted events labelled `SIMULATED RUN` | Tests and offline demos |
+
+**Containment.** The device is disposable (`-wipe-data -no-snapshot-save`); every DNS lookup is
+answered by `dynamic/sinkhole.py` with the host loopback, so the sample behaves as though online —
+which is what makes it act at all — while nothing reaches the internet, and attempted exfiltration
+is recorded rather than delivered. The APK is written once to a work directory outside OneDrive
+(Defender quarantines malware in synced folders) because `adb install` needs a path, then deleted.
+
+**Instrumentation.** Frida hooks the framework methods banking fraud must pass through: `SmsManager`
+send/receive, `WindowManager.addView`, accessibility dispatch, the `*ClassLoader` constructors,
+`HttpURLConnection`/OkHttp/`Socket`, `TelephonyManager` identifiers, `Runtime.exec`. Hooking at that
+level is what defeats the sample's own concealment — reflection, runtime decryption and packers all
+have to resolve to those same APIs — and network calls are captured *before* TLS, so pinning does
+not hide the C2 URL.
+
+**Effect on scoring.** Observed execution outranks both the model and the static rules:
+`risk.dynamic_reasons()` sets the headline to `MALICIOUS (dynamically confirmed)` and floors severity
+(CRITICAL when C2 contact accompanies a confirmed behaviour). The five composite weights are
+deliberately **not** re-weighted, so scores stay comparable with §9b. Network traffic alone confirms
+nothing — every app talks to the internet. And a quiet run never lowers a verdict: a trojan that
+fingerprints the emulator simply sits still, which is a detection limitation, not innocence.
+
+---
+
 ## 9. Explicitly out of scope (documented as "future", not built)
 
-Dynamic sandbox execution · native `.so` analysis · Neo4j / Celery / Redis · live VirusTotal / OSINT ·
+Native `.so` disassembly · reflection resolution · Neo4j / Celery / Redis · live VirusTotal / OSINT ·
 STIX 2.1 · WebSockets · React SPA · generalized overlay reconstruction for arbitrary APKs · multi-tenant auth.
+Detonation is synchronous by design — no job queue, this is a single-user local tool.
 Builder-kit fingerprinting is kept only as a light structural heuristic. These are named so a reader sees a
 scoped, honest prototype rather than an unbuildable roadmap.
 

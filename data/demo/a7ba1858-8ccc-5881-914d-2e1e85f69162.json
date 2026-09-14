@@ -1,8 +1,8 @@
 {
-  "schema_version": 5,
+  "schema_version": 6,
   "case_id": "a7ba1858-8ccc-5881-914d-2e1e85f69162",
   "filename": "DEMO_sms_stealer.apk",
-  "analysed_at": "2026-09-14T05:15:43.694460+00:00",
+  "analysed_at": "2026-09-14T17:36:54.327914+00:00",
   "hashes": {
     "md5": "2bca75673598ef4315326604eefa8e07",
     "sha1": "3990be51cef97b1a1367c71c9d76f450d377cee8",
@@ -167,23 +167,23 @@
     "graph": {
       "nodes": [
         {
+          "id": "78194ee14ca98c7b4d9909be90e3f5548c9bfc85cefd9509db513be061210361",
+          "kind": "sample",
+          "label": "sample:78194ee14c",
+          "known": false
+        },
+        {
           "id": "def0f3b990dcd4375597b65ebc169f1965609fcd49999e0fb7230d18f1ce4603",
           "kind": "certificate",
           "label": "unknown-signer",
           "family": null,
           "known": false
-        },
-        {
-          "id": "78194ee14ca98c7b4d9909be90e3f5548c9bfc85cefd9509db513be061210361",
-          "kind": "sample",
-          "label": "sample:78194ee14c",
-          "known": false
         }
       ],
       "links": [
         {
-          "source": "def0f3b990dcd4375597b65ebc169f1965609fcd49999e0fb7230d18f1ce4603",
-          "target": "78194ee14ca98c7b4d9909be90e3f5548c9bfc85cefd9509db513be061210361",
+          "source": "78194ee14ca98c7b4d9909be90e3f5548c9bfc85cefd9509db513be061210361",
+          "target": "def0f3b990dcd4375597b65ebc169f1965609fcd49999e0fb7230d18f1ce4603",
           "relation": "SIGNED_BY"
         }
       ]
@@ -296,10 +296,37 @@
       ]
     }
   },
+  "dynamic": {
+    "backend": "none",
+    "status": "SKIPPED",
+    "detail": "This demo case is static-only, to show a report where the sample was never executed.",
+    "duration_seconds": 0.0,
+    "runtime_permissions_requested": [],
+    "api_calls": [],
+    "network": {
+      "dns_queries": [],
+      "http_requests": [],
+      "contacted_ips": []
+    },
+    "dynamic_code_loading": [],
+    "overlay_observed": false,
+    "accessibility_used": false,
+    "sms_intercepted": false,
+    "sms_sent": [],
+    "behaviours": [],
+    "blind_spots_resolved": [],
+    "observation_counts": {},
+    "artifacts": {
+      "logcat_lines": 0,
+      "pcap_captured": false
+    }
+  },
   "risk": {
     "headline_verdict": "MALICIOUS",
     "ml_rule_disagreement": false,
     "override_reasons": [],
+    "dynamic_confirmed": false,
+    "dynamic_reasons": [],
     "reconciliation_note": "",
     "composite_score": 41.47,
     "severity": "MEDIUM",
@@ -402,7 +429,13 @@
         "ml_label": "MALICIOUS",
         "ml_confidence": 0.9706,
         "ml_rule_disagreement": false,
-        "rule_override_reasons": []
+        "rule_override_reasons": [],
+        "dynamic_confirmed": false,
+        "dynamic_reasons": []
+      },
+      "dynamic_analysis": {
+        "executed": false,
+        "note": "This sample was NOT executed. Describe static evidence only and never imply runtime observation."
       },
       "banking_trojan_kit": {
         "complete": false,

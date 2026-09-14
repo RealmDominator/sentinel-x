@@ -81,6 +81,38 @@ ANTHROPIC_API_KEY = LLM_API_KEY if LLM_PROVIDER == "anthropic" else ""
 # Case retention: cached analyses older than this are purged at startup (0 = keep forever).
 RETENTION_DAYS = int(os.environ.get("SENTINELX_RETENTION_DAYS", "30") or 0)
 
+# --- Dynamic analysis (the only code path that executes a sample) ------------
+# Off by default and opt-in per upload: an analysis detonates nothing unless asked.
+#   none      static only (default)
+#   emulator  local throwaway rooted AVD + Frida, DNS pointed at the local sinkhole
+#   triage    Hatching Triage — shares the sample, so it is allowed only for
+#             already-public MalwareBazaar samples on the evaluation path
+#   mock      scripted events, for tests and for demoing without an emulator
+DYNAMIC_BACKEND = os.environ.get("SENTINELX_DYNAMIC_BACKEND", "none").strip().lower()
+DYNAMIC_TIMEOUT = int(os.environ.get("SENTINELX_DYNAMIC_TIMEOUT", "180") or 180)
+# Dedicated AVD. Must be a `google_apis` (NOT `google_apis_playstore`) image: Play
+# Store images are production-signed, so `adb root` is refused and frida-server
+# cannot start. scripts/setup_dynamic.py creates it.
+AVD_NAME = os.environ.get("SENTINELX_AVD_NAME", "sentinelx_detonator")
+ANDROID_SDK = Path(os.environ.get("ANDROID_SDK_ROOT")
+                   or os.environ.get("ANDROID_HOME")
+                   or Path.home() / "AppData/Local/Android/Sdk")
+# Scratch space for the one authorised disk write (the APK handed to `adb install`,
+# deleted immediately after). Keep this OUT of OneDrive: Defender quarantines
+# malware in synced folders, which corrupts the run and the sync history.
+DYNAMIC_WORKDIR = Path(os.environ.get("SENTINELX_DYNAMIC_WORKDIR")
+                       or Path(os.environ.get("LOCALAPPDATA", "/tmp"))
+                       / "sentinelx" / "detonation")
+# Every DNS answer inside the sandbox points here, so C2 traffic is recorded and
+# contained instead of reaching the real host. 10.0.2.2 is the emulator's alias
+# for the host loopback.
+SINKHOLE_IP = os.environ.get("SENTINELX_SINKHOLE_IP", "10.0.2.2")
+SINKHOLE_DNS_PORT = int(os.environ.get("SENTINELX_SINKHOLE_DNS_PORT", "5354") or 5354)
+SINKHOLE_HTTP_PORT = int(os.environ.get("SENTINELX_SINKHOLE_HTTP_PORT", "8081") or 8081)
+TRIAGE_API_KEY = os.environ.get("TRIAGE_API_KEY", "").strip()
+TRIAGE_BASE_URL = os.environ.get("TRIAGE_BASE_URL",
+                                 "https://tria.ge/api").rstrip("/")
+
 # Indian banking / UPI app packages (target detection). Verify against the Play Store
 # before relying on a match — a wrong package name silently never fires.
 BANK_PACKAGES = {

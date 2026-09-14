@@ -49,10 +49,14 @@ def flagged(case: dict) -> bool:
             or case["risk"]["severity"] in ("MEDIUM", "HIGH", "CRITICAL"))
 
 
-def run_one(data: bytes, name: str, label: str, family: str = "") -> dict | None:
+def run_one(data: bytes, name: str, label: str, family: str = "",
+            dynamic: bool | str = False) -> dict | None:
     try:
         pipeline.validate(data)
-        case = pipeline.analyse(data, None, name, use_cache=False)
+        # allow_upload is true only here: --dynamic runs on MalwareBazaar samples,
+        # which are already public. Never on a user's uploaded file.
+        case = pipeline.analyse(data, None, name, use_cache=False,
+                                dynamic=dynamic, allow_upload=bool(dynamic))
     except (pipeline.IngestError, pipeline.ParseError) as exc:
         print(f"  skip {name}: {exc}")
         return None
@@ -72,7 +76,8 @@ def rescore(case: dict) -> dict:
     case["attack"] = attack.analyse(case["signals"], case["fraud"])
     completeness = 1.0 if case.get("analysis_completeness") == "FULL" else 0.85
     case["risk"] = risk.compute(case["classification"], case["fraud"],
-                                case["attribution"], case["evasion"], completeness)
+                                case["attribution"], case["evasion"], completeness,
+                                case.get("dynamic"))
     return case
 
 
@@ -90,6 +95,8 @@ def row_for(case: dict, name: str, label: str, family: str = "") -> dict:
         "banks": [b["bank"] for b in case["fraud"]["targeted_banks"]],
         "attribution": case["attribution"]["confidence"],
         "evasion": case["evasion"]["sophistication"],
+        "dynamic": case.get("dynamic", {}).get("status", "SKIPPED"),
+        "dynamic_confirmed": case["risk"].get("dynamic_confirmed", False),
         "flagged": flagged(case),
     }
     print(f"  {label:7s} {name[:34]:34s} ML={row['ml_verdict']:9s} "
@@ -136,6 +143,11 @@ def main() -> None:
                     help="skip the newest N APKs per family (draw unseen samples)")
     ap.add_argument("--keep-corpus", action="store_true",
                     help="evaluate every downloaded sample; leave cert_corpus.json as is")
+    ap.add_argument("--dynamic", nargs="?", const="triage", default="",
+                    metavar="BACKEND",
+                    help="also run MalwareBazaar samples dynamically (default backend: "
+                         "triage — those samples are already public). Benign controls "
+                         "are never detonated.")
     args = ap.parse_args()
 
     rows: list[dict] = []
@@ -191,8 +203,11 @@ def main() -> None:
             write_corpus(corpus_entries, "Real signing certificates from the corpus half "
                          "of a MalwareBazaar split (see scripts/real_world_eval.py).")
             certgraph.reload_corpus()
+        if args.dynamic:
+            print(f"   dynamic analysis via {args.dynamic} — malware samples only")
         for fam, sha, data in holdout:
-            if (r := run_one(data, f"{fam}_{sha[:12]}.apk", "malware", fam)) is not None:
+            if (r := run_one(data, f"{fam}_{sha[:12]}.apk", "malware", fam,
+                             dynamic=args.dynamic)) is not None:
                 rows.append(r)
 
     summary = summarise(rows)

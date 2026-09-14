@@ -102,7 +102,10 @@ def build_pdf(case: dict[str, Any]) -> bytes:
     p.kv("Analysed at (UTC)", case["analysed_at"])
     p.kv("Completeness", case.get("analysis_completeness", "FULL"))
     p.kv("Recommended response", risk["recommended_response"])
-    if risk.get("ml_rule_disagreement"):
+    if risk.get("dynamic_confirmed"):
+        p.h2("Confirmed by execution")
+        p.body(risk["reconciliation_note"])
+    elif risk.get("ml_rule_disagreement"):
         p.h2("ML / rule disagreement")
         p.body(risk["reconciliation_note"])
 
@@ -241,11 +244,52 @@ def build_pdf(case: dict[str, Any]) -> bytes:
     p.h2("What this static analysis could NOT see")
     p.bullets(ev["blind_spots"])
 
-    # --- 10. Recommended actions + CERT-In ---
-    p.h1("10. Recommended Actions")
+    # --- 10. Dynamic analysis ---
+    dyn = case.get("dynamic", {})
+    p.h1("10. Dynamic Analysis (Sandbox Execution)")
+    if dyn.get("status") not in ("COMPLETED", "TIMEOUT"):
+        p.body(dyn.get("detail")
+               or "This sample was not executed; the findings above are static only.")
+    else:
+        p.kv("Sandbox", dyn.get("backend", ""))
+        p.kv("Status", dyn.get("status", ""))
+        p.kv("Execution window", f"{dyn.get('duration_seconds', 0)} s")
+        if dyn.get("backend") == "mock":
+            p.body(dyn.get("detail", ""))
+        if behaviours := dyn.get("behaviours"):
+            p.h2("Behaviour observed at runtime")
+            p.set_font("Helvetica", "", 9)
+            for b in behaviours:
+                p.set_x(p.l_margin + 4)
+                p.multi_cell(p.w - p.r_margin - p.get_x(), 5, _clean(
+                    f"- [{b.get('mitre_id', '')}] {b.get('label', '')} - "
+                    f"evidence: {b.get('evidence', '')}"),
+                    new_x="LMARGIN", new_y="NEXT")
+            p.ln(1)
+        else:
+            p.body("The sample ran but performed no flagged action. Banking trojans "
+                   "routinely stay dormant under emulation, so this does not clear it.")
+        net = dyn.get("network", {})
+        if reqs := net.get("http_requests"):
+            p.h2("Network requests (contained by the sinkhole - none left the host)")
+            p.bullets([f"{r.get('method', '')} {r.get('host', '')}{r.get('path', '')}"
+                       for r in reqs[:12]])
+        if hosts := net.get("dns_queries"):
+            p.h2("Hosts resolved at runtime")
+            p.bullets(hosts[:12])
+        if loads := dyn.get("dynamic_code_loading"):
+            p.h2("Code loaded at runtime (not present in the APK)")
+            p.bullets([f"{d.get('loader', '')}: {d.get('path_or_hash', '')}"
+                       for d in loads[:10]])
+        if resolved := dyn.get("blind_spots_resolved"):
+            p.h2("Static blind spots closed by this run")
+            p.bullets([f"{r['key']} - {r['observed']}" for r in resolved])
+
+    # --- 11. Recommended actions + CERT-In ---
+    p.h1("11. Recommended Actions")
     p.bullets(nar.get("recommended_actions", []))
 
-    p.h1("11. CERT-In Incident Report (Draft)")
+    p.h1("12. CERT-In Incident Report (Draft)")
     p.set_font("Helvetica", "I", 8.5)
     p.set_text_color(120, 120, 120)
     p.multi_cell(0, 4.5, _clean(meta.get("label", "")))

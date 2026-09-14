@@ -30,6 +30,7 @@ if "--live" not in sys.argv:
     os.environ["SENTINELX_LLM_PROVIDER"] = "none"
 
 from sentinelx import attack, certgraph, evasion, fraud, genai, risk  # noqa: E402
+from sentinelx.dynamic import behaviours as dyn_behaviours, schema as dyn_schema  # noqa: E402
 from sentinelx.pipeline import SCHEMA_VERSION  # noqa: E402
 from sentinelx.config import DEMO, MODELS  # noqa: E402
 from sentinelx.features import feature_vocab  # noqa: E402
@@ -76,6 +77,47 @@ CASES = [
         "ips": ["185.199.110.153"],
         "evasion": ["anti_emulator", "anti_debugger", "reflection",
                     "dynamic_loading", "crypto"],
+        # Crafted sandbox observations, run through the real behaviour rules.
+        # Mirrors a documented Cerberus-family detonation: SMS interception, an
+        # overlay draw, a second-stage DEX fetched from the panel.
+        "dynamic": {
+            "runtime_permissions_requested": [
+                "android.permission.RECEIVE_SMS", "android.permission.READ_SMS"],
+            "api_calls": [
+                {"class": "android.telephony.SmsMessage", "method": "createFromPdu",
+                 "args_summary": "incoming SMS PDU", "count": 6},
+                {"class": "android.view.WindowManager", "method": "addView",
+                 "args_summary": "TYPE_APPLICATION_OVERLAY over com.sbi.lotusintouch",
+                 "count": 3},
+                {"class": "android.telephony.TelephonyManager", "method": "getDeviceId",
+                 "args_summary": "", "count": 2},
+                {"class": "dalvik.system.DexClassLoader", "method": "<init>",
+                 "args_summary": "files/upd.jar", "count": 1},
+                {"class": "android.content.pm.PackageManager",
+                 "method": "getInstalledPackages", "args_summary": "", "count": 1},
+            ],
+            "network": {
+                "dns_queries": ["c2-panel.example-demo.invalid",
+                                "api.example-demo.invalid"],
+                "http_requests": [
+                    {"method": "POST", "host": "c2-panel.example-demo.invalid",
+                     "path": "/gate.php"},
+                    {"method": "POST", "host": "api.example-demo.invalid",
+                     "path": "/bot/register"},
+                    {"method": "GET", "host": "c2-panel.example-demo.invalid",
+                     "path": "/upd.jar"},
+                ],
+                "contacted_ips": ["185.199.110.153"],
+            },
+            "dynamic_code_loading": [
+                {"loader": "DexClassLoader",
+                 "path_or_hash": "/data/data/com.sbi.secure.update/files/upd.jar"}],
+            "overlay_observed": True,
+            "accessibility_used": True,
+            "sms_intercepted": True,
+            "sms_sent": [{"to": "+910000000000", "body_summary": "<forwarded OTP>"}],
+            "artifacts": {"logcat_lines": 1174, "pcap_captured": True},
+        },
     },
     {
         "filename": "DEMO_sms_stealer.apk",
@@ -166,8 +208,25 @@ def build(spec: dict) -> dict:
     fraud_result = fraud.analyse(signals)
     evasion_result = evasion.summarise({k: evasion.LABELS[k] for k in spec["evasion"]})
     attack_result = attack.analyse(signals, fraud_result)
+
+    # Sandbox observations are crafted the same way the permission profile is;
+    # the behaviour rules, blind-spot reconciliation and risk override are real.
+    if spec.get("dynamic"):
+        dynamic_result = dyn_schema.build(
+            "emulator", "COMPLETED", duration_seconds=180.0,
+            detail="DEMO — crafted sandbox observations scored by the real "
+                   "behaviour rules; no sample was executed.",
+            **spec["dynamic"])
+        dyn_behaviours.enrich(
+            dynamic_result,
+            {t["key"] for t in evasion_result["techniques_detected"]})
+    else:
+        dynamic_result = dyn_schema.skipped(
+            "This demo case is static-only, to show a report where the sample "
+            "was never executed.")
+
     risk_result = risk.compute(classification, fraud_result, attribution,
-                               evasion_result, 1.0)
+                               evasion_result, 1.0, dynamic_result)
 
     case = {
         "schema_version": SCHEMA_VERSION,
@@ -181,7 +240,8 @@ def build(spec: dict) -> dict:
         "is_demo": True,
         "signals": signals, "classification": classification,
         "attribution": attribution, "fraud": fraud_result,
-        "evasion": evasion_result, "attack": attack_result, "risk": risk_result,
+        "evasion": evasion_result, "attack": attack_result,
+        "dynamic": dynamic_result, "risk": risk_result,
         "cache_hit": False,
     }
     case["narrative"] = genai.generate(case)

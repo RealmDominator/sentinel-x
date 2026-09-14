@@ -10,8 +10,8 @@ from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 
-from . import iocs, pipeline, report
-from .config import CASES, DEMO, MODELS, RETENTION_DAYS, STATIC
+from . import dynamic, iocs, pipeline, report
+from .config import CASES, DEMO, DYNAMIC_BACKEND, MODELS, RETENTION_DAYS, STATIC
 
 
 @asynccontextmanager
@@ -53,6 +53,9 @@ def health() -> dict[str, Any]:
                           if metrics_path.exists() else None),
         "cached_cases": len(list(CASES.glob("*.json"))),
         "demo_cases": len(list(DEMO.glob("*.json"))),
+        # The dashboard hides the detonate button unless a sandbox is configured.
+        "dynamic_backend": DYNAMIC_BACKEND,
+        "dynamic_available": dynamic.available(),
     }
 
 
@@ -71,6 +74,34 @@ async def analyze(file: UploadFile = File(...)) -> JSONResponse:
         raise HTTPException(422, str(exc))
     except Exception as exc:
         raise HTTPException(500, f"ANALYSIS_FAILED: {exc}")
+    return JSONResponse(case)
+
+
+@app.post("/api/detonate")
+async def detonate(file: UploadFile = File(...)) -> JSONResponse:
+    """Run the sample in the sandbox and merge what it did into its case.
+
+    Opt-in and deliberately separate from /api/analyze: this is the only endpoint
+    that executes a sample, it takes minutes rather than seconds, and it requires
+    a configured sandbox. The bytes are re-uploaded because samples are never
+    kept on disk between requests.
+    """
+    if not dynamic.available():
+        raise HTTPException(503, "DYNAMIC_UNAVAILABLE: no sandbox is configured. "
+                                 "Set SENTINELX_DYNAMIC_BACKEND in .env "
+                                 "(run scripts/setup_dynamic.py for the emulator).")
+    data = await file.read()
+    try:
+        pipeline.validate(data)
+    except pipeline.IngestError as exc:
+        raise HTTPException(400, str(exc))
+    try:
+        case = await run_in_threadpool(
+            pipeline.detonate, data, file.filename or "sample.apk")
+    except pipeline.ParseError as exc:
+        raise HTTPException(422, str(exc))
+    except Exception as exc:
+        raise HTTPException(500, f"DETONATION_FAILED: {exc}")
     return JSONResponse(case)
 
 
