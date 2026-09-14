@@ -4,7 +4,6 @@
 Drop in a suspicious `.apk` → get an explainable verdict, attribution, MITRE ATT&CK chain,
 a composite risk score, IOCs and a PDF intelligence report. The sample is **never executed**.
 
-Built for **PSB Cybersecurity, Fraud & AI Hackathon 2026 — Problem Statement 1**.
 The full solution specification is in **[`Final_md.md`](Final_md.md)**.
 
 ---
@@ -117,7 +116,6 @@ scripts/
 tests/                 unit + end-to-end tests
 models/                trained artifacts + metrics.json
 data/                  cert corpus, analysis cache, demo cases
-_archive_originals/    the 15 superseded planning documents
 ```
 
 ## API keys (`.env`)

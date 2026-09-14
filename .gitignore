@@ -11,6 +11,9 @@ __pycache__/
 venv/
 graphify-out/
 
+# --- Superseded planning drafts (kept locally only)
+_archive_originals/
+
 # --- Sample APKs and anything derived from uploads
 # Third-party apps (not ours to redistribute) and large; fetch with the documented commands.
 samples/**/*.apk

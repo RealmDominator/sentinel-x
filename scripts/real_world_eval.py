@@ -1,7 +1,7 @@
 """Evaluate the FULL pipeline (not just the ML model) on real APKs.
 
 NATICUSdroid metrics measure the permission classifier on its own corpus. This
-script measures what a judge actually cares about: does the platform's
+script measures what an analyst actually cares about: does the platform's
 headline verdict flag real banking trojans while leaving real benign apps alone?
 
     # benign controls only (works offline, uses samples/*.apk)

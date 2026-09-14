@@ -4,12 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-SENTINEL-X — Android banking-malware **static** analysis platform (PSB Cybersecurity, Fraud & AI
-Hackathon 2026, Problem Statement 1). Upload an `.apk`, get an explainable ML verdict, certificate
-attribution, MITRE ATT&CK chain, composite risk score, GenAI narrative, PDF report and IOC exports.
+SENTINEL-X — Android banking-malware **static** analysis platform. Upload an `.apk`, get an
+explainable ML verdict, certificate attribution, MITRE ATT&CK chain, composite risk score, GenAI narrative, PDF report and IOC exports.
 
 `Final_md.md` is the authoritative solution specification — read it before changing analysis behaviour.
-`_archive_originals/` holds 15 superseded planning documents; they are historical, not requirements.
+`_archive_originals/` (local only, git-ignored) holds superseded planning documents; they are historical, not requirements.
 
 ## Commands
 
@@ -116,4 +115,4 @@ intended, documented behaviour and is asserted in the tests.
 Dynamic sandbox execution, native `.so` analysis, reflection resolution, Neo4j/Celery/Redis, live
 VirusTotal, STIX 2.1, WebSockets, React, generalized overlay reconstruction, auth/multi-tenancy.
 These are named as "future" in `Final_md.md` deliberately — the honest scoping is part of the
-submission's argument. Don't add them without the user asking.
+project's argument. Don't add them without the user asking.

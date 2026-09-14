@@ -1,13 +1,12 @@
 # SENTINEL-X — Final Solution & Build Specification
 
 **Android Banking-Malware Static Analysis & Intelligence Platform**
-PSB Cybersecurity, Fraud & AI Hackathon 2026 — **Problem Statement 1**
 *Automated Reverse Engineering, Static Analysis, Risk Scoring & Generative-AI reporting of fraudulent APKs.*
 
 > This is the single authoritative document for the project. It consolidates ~15 earlier drafts
 > (idea catalog, specification, audit, and six duplicate "final concept" files) into **one realistic,
 > buildable plan** scoped for a **solo first-year engineering student building with AI assistance in ~6–8 weeks**.
-> The earlier drafts are preserved in `_archive_originals/`.
+> The earlier drafts are kept locally and are not part of the repository.
 
 ---
 
@@ -29,9 +28,9 @@ free, balanced dataset** so its metrics are genuine rather than claimed.
 
 ---
 
-## 2. Problem Statement Mapping (PS1)
+## 2. Requirements Mapping
 
-| PS1 requirement | How SENTINEL-X satisfies it |
+| Requirement | How SENTINEL-X satisfies it |
 |---|---|
 | **Generative AI** | GenAI layer produces the executive summary, attack-chain narrative, and a pre-filled **CERT-In incident report** from *structured, verified* inputs. Template-first (deterministic, demo-safe); live LLM optional. All AI output is labeled and shown beside its source data. |
 | **Automated Reverse Engineering** | `androguard` decompiles the APK in-process — manifest, permissions, certificates, DEX, strings — fully automated from upload. |
@@ -184,7 +183,7 @@ always demonstrable even with no sample APK or backend.
 
 Dynamic sandbox execution · native `.so` analysis · Neo4j / Celery / Redis · live VirusTotal / OSINT ·
 STIX 2.1 · WebSockets · React SPA · generalized overlay reconstruction for arbitrary APKs · multi-tenant auth.
-Builder-kit fingerprinting is kept only as a light structural heuristic. These are named so a judge sees a
+Builder-kit fingerprinting is kept only as a light structural heuristic. These are named so a reader sees a
 scoped, honest prototype rather than an unbuildable roadmap.
 
 ---
@@ -307,4 +306,4 @@ pytest -q                          # unit tests (feature extraction + rules)
 
 ---
 
-*SENTINEL-X — consolidated final specification. Supersedes all files in `_archive_originals/`.*
+*SENTINEL-X — consolidated final specification. Supersedes all earlier drafts.*
