@@ -1,0 +1,825 @@
+{
+  "schema_version": 5,
+  "case_id": "328d4d9f-ffff-58c9-ab90-f68d6b0f604c",
+  "filename": "DEMO_banking_overlay_trojan.apk",
+  "analysed_at": "2026-09-14T05:15:43.534385+00:00",
+  "hashes": {
+    "md5": "f0cdc9761a2e6ec86d5b792466f757f6",
+    "sha1": "09c6afbdf9d149b0373c34494925b2723e9bbc8b",
+    "sha256": "77d107b98f8fd794061c5d8fe632e1e0fa7feaca4c602bff3cc9ec841eedd6bb"
+  },
+  "file_size_bytes": 3145728,
+  "package": "com.sbi.secure.update",
+  "analysis_completeness": "FULL",
+  "notes": [
+    "DEMO CASE \u2014 analysis modules are real; APK parsing was substituted with a crafted permission profile."
+  ],
+  "is_demo": true,
+  "signals": {
+    "package": "com.sbi.secure.update",
+    "permissions": [
+      "android.permission.INTERNET",
+      "android.permission.READ_PHONE_STATE",
+      "android.permission.CHANGE_CONFIGURATION",
+      "android.permission.INSTALL_SHORTCUT",
+      "android.permission.RECEIVE_USER_PRESENT",
+      "android.permission.READ_SMS",
+      "android.permission.RECEIVE_SMS",
+      "android.permission.SEND_SMS",
+      "android.permission.BIND_NOTIFICATION_LISTENER_SERVICE",
+      "android.permission.BIND_ACCESSIBILITY_SERVICE",
+      "android.permission.SYSTEM_ALERT_WINDOW",
+      "android.permission.BIND_DEVICE_ADMIN",
+      "android.permission.REQUEST_INSTALL_PACKAGES",
+      "android.permission.READ_CONTACTS",
+      "android.permission.READ_CALL_LOG",
+      "android.permission.RECORD_AUDIO",
+      "android.permission.CAMERA",
+      "android.permission.READ_EXTERNAL_STORAGE",
+      "android.permission.WRITE_EXTERNAL_STORAGE",
+      "android.permission.RECEIVE_BOOT_COMPLETED",
+      "android.permission.FOREGROUND_SERVICE",
+      "android.permission.ACCESS_FINE_LOCATION",
+      "android.permission.QUERY_ALL_PACKAGES",
+      "android.permission.WAKE_LOCK",
+      "android.permission.GET_TASKS",
+      "android.permission.DISABLE_KEYGUARD"
+    ],
+    "short_permissions": [
+      "ACCESS_FINE_LOCATION",
+      "BIND_ACCESSIBILITY_SERVICE",
+      "BIND_DEVICE_ADMIN",
+      "BIND_NOTIFICATION_LISTENER_SERVICE",
+      "CAMERA",
+      "CHANGE_CONFIGURATION",
+      "DISABLE_KEYGUARD",
+      "FOREGROUND_SERVICE",
+      "GET_TASKS",
+      "INSTALL_SHORTCUT",
+      "INTERNET",
+      "QUERY_ALL_PACKAGES",
+      "READ_CALL_LOG",
+      "READ_CONTACTS",
+      "READ_EXTERNAL_STORAGE",
+      "READ_PHONE_STATE",
+      "READ_SMS",
+      "RECEIVE_BOOT_COMPLETED",
+      "RECEIVE_SMS",
+      "RECEIVE_USER_PRESENT",
+      "RECORD_AUDIO",
+      "REQUEST_INSTALL_PACKAGES",
+      "SEND_SMS",
+      "SYSTEM_ALERT_WINDOW",
+      "WAKE_LOCK",
+      "WRITE_EXTERNAL_STORAGE"
+    ],
+    "activities": [],
+    "services": [],
+    "receivers": [],
+    "referenced_packages": [
+      "com.sbi.secure.update"
+    ],
+    "string_referenced_packages": [
+      "com.csam.icici.bank.imobile",
+      "com.sbi.lotusintouch",
+      "com.snapwork.hdfc",
+      "net.one97.paytm"
+    ],
+    "urls": [
+      "http://c2-panel.example-demo.invalid/gate.php",
+      "http://api.example-demo.invalid/bot/register"
+    ],
+    "ips": [
+      "185.199.110.153"
+    ],
+    "n_strings": 0
+  },
+  "classification": {
+    "verdict": "BENIGN",
+    "confidence": 0.9882,
+    "malicious_probability": 0.0118,
+    "shap_top_features": [
+      {
+        "feature": "REQUEST_INSTALL_PACKAGES",
+        "full_name": "android.permission.REQUEST_INSTALL_PACKAGES",
+        "contribution": -2.5856,
+        "present": true
+      },
+      {
+        "feature": "SEND_SMS",
+        "full_name": "android.permission.SEND_SMS",
+        "contribution": 2.0427,
+        "present": true
+      },
+      {
+        "feature": "FOREGROUND_SERVICE",
+        "full_name": "android.permission.FOREGROUND_SERVICE",
+        "contribution": -1.603,
+        "present": true
+      },
+      {
+        "feature": "RECEIVE_USER_PRESENT",
+        "full_name": "android.permission.RECEIVE_USER_PRESENT",
+        "contribution": -1.5534,
+        "present": true
+      },
+      {
+        "feature": "READ_EXTERNAL_STORAGE",
+        "full_name": "android.permission.READ_EXTERNAL_STORAGE",
+        "contribution": -1.4887,
+        "present": true
+      },
+      {
+        "feature": "DISABLE_KEYGUARD",
+        "full_name": "android.permission.DISABLE_KEYGUARD",
+        "contribution": -1.3173,
+        "present": true
+      },
+      {
+        "feature": "GET_TASKS",
+        "full_name": "android.permission.GET_TASKS",
+        "contribution": 1.1812,
+        "present": true
+      },
+      {
+        "feature": "CAMERA",
+        "full_name": "android.permission.CAMERA",
+        "contribution": -1.104,
+        "present": true
+      },
+      {
+        "feature": "ACCESS_COARSE_LOCATION",
+        "full_name": "android.permission.ACCESS_COARSE_LOCATION",
+        "contribution": -0.7205,
+        "present": false
+      },
+      {
+        "feature": "RECEIVE_SMS",
+        "full_name": "android.permission.RECEIVE_SMS",
+        "contribution": 0.7057,
+        "present": true
+      },
+      {
+        "feature": "RECEIVE_BOOT_COMPLETED",
+        "full_name": "android.permission.RECEIVE_BOOT_COMPLETED",
+        "contribution": 0.6226,
+        "present": true
+      },
+      {
+        "feature": "SYSTEM_ALERT_WINDOW",
+        "full_name": "android.permission.SYSTEM_ALERT_WINDOW",
+        "contribution": 0.5399,
+        "present": true
+      },
+      {
+        "feature": "WAKE_LOCK",
+        "full_name": "android.permission.WAKE_LOCK",
+        "contribution": 0.5013,
+        "present": true
+      },
+      {
+        "feature": "CHANGE_CONFIGURATION",
+        "full_name": "android.permission.CHANGE_CONFIGURATION",
+        "contribution": 0.4888,
+        "present": true
+      },
+      {
+        "feature": "RECEIVE",
+        "full_name": "com.google.android.c2dm.permission.RECEIVE",
+        "contribution": 0.4815,
+        "present": false
+      }
+    ]
+  },
+  "attribution": {
+    "certificate": {
+      "sha256": "eff63390d372cbfc45e4a822181c521f4f15ecf389f70fec68d58a1495cd1e2a",
+      "subject_cn": "ql7RsCkB",
+      "issuer_cn": "ql7RsCkB",
+      "self_signed": true,
+      "serial": "1"
+    },
+    "related_families": [
+      "SpyNote"
+    ],
+    "confidence": "HIGH",
+    "signer_flags": [],
+    "shared_signer_samples": [],
+    "graph": {
+      "nodes": [
+        {
+          "id": "SpyNote",
+          "kind": "family",
+          "label": "SpyNote",
+          "known": false
+        },
+        {
+          "id": "77d107b98f8fd794061c5d8fe632e1e0fa7feaca4c602bff3cc9ec841eedd6bb",
+          "kind": "sample",
+          "label": "sample:77d107b98f",
+          "known": false
+        },
+        {
+          "id": "eff63390d372cbfc45e4a822181c521f4f15ecf389f70fec68d58a1495cd1e2a",
+          "kind": "certificate",
+          "label": "ql7RsCkB",
+          "family": null,
+          "known": true
+        }
+      ],
+      "links": [
+        {
+          "source": "SpyNote",
+          "target": "eff63390d372cbfc45e4a822181c521f4f15ecf389f70fec68d58a1495cd1e2a",
+          "relation": "ATTRIBUTED_TO"
+        },
+        {
+          "source": "77d107b98f8fd794061c5d8fe632e1e0fa7feaca4c602bff3cc9ec841eedd6bb",
+          "target": "eff63390d372cbfc45e4a822181c521f4f15ecf389f70fec68d58a1495cd1e2a",
+          "relation": "SIGNED_BY"
+        }
+      ]
+    },
+    "corpus_size": 19
+  },
+  "fraud": {
+    "otp_interception_risk": "HIGH",
+    "otp_triplet_complete": true,
+    "trojan_kit_complete": true,
+    "overlay_kit_without_admin": false,
+    "package_name_obfuscated": false,
+    "capabilities": {
+      "accessibility_abuse": [
+        "BIND_ACCESSIBILITY_SERVICE"
+      ],
+      "device_admin": [
+        "BIND_DEVICE_ADMIN"
+      ],
+      "sms_interception": [
+        "READ_SMS",
+        "RECEIVE_SMS"
+      ],
+      "notification_interception": [
+        "BIND_NOTIFICATION_LISTENER_SERVICE"
+      ],
+      "overlay": [
+        "SYSTEM_ALERT_WINDOW"
+      ],
+      "app_enumeration": [
+        "GET_TASKS",
+        "QUERY_ALL_PACKAGES"
+      ],
+      "lock_screen_control": [
+        "DISABLE_KEYGUARD"
+      ],
+      "fraud_actions": [
+        "SEND_SMS"
+      ]
+    },
+    "signals": [
+      "Banking-trojan capability kit: accessibility service + device admin + SMS interception declared together",
+      "Accessibility abuse: BIND_ACCESSIBILITY_SERVICE",
+      "Device admin: BIND_DEVICE_ADMIN",
+      "Sms interception: READ_SMS, RECEIVE_SMS",
+      "Notification interception: BIND_NOTIFICATION_LISTENER_SERVICE",
+      "Overlay: SYSTEM_ALERT_WINDOW",
+      "App enumeration: GET_TASKS, QUERY_ALL_PACKAGES",
+      "Lock screen control: DISABLE_KEYGUARD",
+      "Fraud actions: SEND_SMS",
+      "Full OTP-interception triplet declared: READ_SMS + RECEIVE_SMS + BIND_NOTIFICATION_LISTENER_SERVICE",
+      "Surveillance capability: ACCESS_FINE_LOCATION",
+      "Surveillance capability: CAMERA",
+      "Surveillance capability: READ_CALL_LOG",
+      "Surveillance capability: READ_CONTACTS",
+      "Surveillance capability: RECORD_AUDIO",
+      "Targets Indian bank app: ICICI iMobile Pay (com.csam.icici.bank.imobile) via DEX string constant",
+      "Targets Indian bank app: SBI YONO (com.sbi.lotusintouch) via DEX string constant",
+      "Targets Indian bank app: HDFC MobileBanking (com.snapwork.hdfc) via DEX string constant",
+      "Targets Indian bank app: Paytm (net.one97.paytm) via DEX string constant"
+    ],
+    "targeted_banks": [
+      {
+        "package": "com.csam.icici.bank.imobile",
+        "bank": "ICICI iMobile Pay",
+        "source": "dex_strings"
+      },
+      {
+        "package": "com.sbi.lotusintouch",
+        "bank": "SBI YONO",
+        "source": "dex_strings"
+      },
+      {
+        "package": "com.snapwork.hdfc",
+        "bank": "HDFC MobileBanking",
+        "source": "dex_strings"
+      },
+      {
+        "package": "net.one97.paytm",
+        "bank": "Paytm",
+        "source": "dex_strings"
+      }
+    ],
+    "notes": [],
+    "fraud_signal_score": 9,
+    "fraud_signal_max": 10
+  },
+  "evasion": {
+    "sophistication": "HIGH",
+    "techniques_detected": [
+      {
+        "key": "anti_emulator",
+        "label": "Emulator fingerprint checks",
+        "strength": "strong"
+      },
+      {
+        "key": "anti_debugger",
+        "label": "Debugger detection",
+        "strength": "weak"
+      },
+      {
+        "key": "reflection",
+        "label": "Reflection-based API concealment",
+        "strength": "weak"
+      },
+      {
+        "key": "dynamic_loading",
+        "label": "Runtime DEX loading",
+        "strength": "strong"
+      },
+      {
+        "key": "crypto",
+        "label": "Runtime string/payload decryption",
+        "strength": "weak"
+      }
+    ],
+    "evasion_count": 5,
+    "strong_indicators": 2,
+    "blind_spots": [
+      "API calls hidden behind reflection are not resolved \u2014 static API inventory may be incomplete.",
+      "A DEX payload is loaded at runtime and is not present in the analysed file \u2014 its behaviour is unseen.",
+      "Strings/config appear to be decrypted at runtime \u2014 any C2 URL may be encrypted at rest and not statically recoverable."
+    ]
+  },
+  "attack": {
+    "techniques": [
+      {
+        "id": "T1412",
+        "name": "Capture SMS Messages",
+        "tactic": "Collection",
+        "evidence": "READ_SMS + RECEIVE_SMS declared"
+      },
+      {
+        "id": "T1417",
+        "name": "Input Capture",
+        "tactic": "Collection",
+        "evidence": "Accessibility service binding declared"
+      },
+      {
+        "id": "T1418",
+        "name": "Software Discovery",
+        "tactic": "Discovery",
+        "evidence": "Enumerates installed packages"
+      },
+      {
+        "id": "T1416",
+        "name": "Input Injection",
+        "tactic": "Impact",
+        "evidence": "Draw-over-other-apps (overlay) permission"
+      },
+      {
+        "id": "T1401",
+        "name": "Device Administrator Permissions",
+        "tactic": "Persistence",
+        "evidence": "Device admin binding declared"
+      },
+      {
+        "id": "T1474",
+        "name": "Supply Chain Compromise",
+        "tactic": "Initial Access",
+        "evidence": "Can install further packages (dropper)"
+      },
+      {
+        "id": "T1437",
+        "name": "Application Layer Protocol",
+        "tactic": "Command and Control",
+        "evidence": "Network access declared"
+      },
+      {
+        "id": "T1429",
+        "name": "Audio Capture",
+        "tactic": "Collection",
+        "evidence": "Microphone access declared"
+      },
+      {
+        "id": "T1512",
+        "name": "Video Capture",
+        "tactic": "Collection",
+        "evidence": "Camera access declared"
+      },
+      {
+        "id": "T1433",
+        "name": "Access Call Log",
+        "tactic": "Collection",
+        "evidence": "Call log access declared"
+      },
+      {
+        "id": "T1430",
+        "name": "Location Tracking",
+        "tactic": "Discovery",
+        "evidence": "Fine location access declared"
+      },
+      {
+        "id": "T1636",
+        "name": "Protected User Data: Contacts",
+        "tactic": "Collection",
+        "evidence": "Contact list access declared"
+      },
+      {
+        "id": "T1409",
+        "name": "Stored Application Data",
+        "tactic": "Collection",
+        "evidence": "External storage read access"
+      },
+      {
+        "id": "T1624",
+        "name": "Event Triggered Execution",
+        "tactic": "Persistence",
+        "evidence": "Auto-start on device boot"
+      },
+      {
+        "id": "T1541",
+        "name": "Foreground Persistence",
+        "tactic": "Persistence",
+        "evidence": "Persistent foreground service"
+      },
+      {
+        "id": "T1417.002",
+        "name": "GUI Input Capture",
+        "tactic": "Collection",
+        "evidence": "Overlay permission combined with Indian banking app targeting"
+      }
+    ],
+    "technique_count": 16,
+    "tactics": {
+      "Collection": [
+        "T1412",
+        "T1417",
+        "T1429",
+        "T1512",
+        "T1433",
+        "T1636",
+        "T1409",
+        "T1417.002"
+      ],
+      "Discovery": [
+        "T1418",
+        "T1430"
+      ],
+      "Impact": [
+        "T1416"
+      ],
+      "Persistence": [
+        "T1401",
+        "T1624",
+        "T1541"
+      ],
+      "Initial Access": [
+        "T1474"
+      ],
+      "Command and Control": [
+        "T1437"
+      ]
+    }
+  },
+  "risk": {
+    "headline_verdict": "SUSPICIOUS (rule-driven)",
+    "ml_rule_disagreement": true,
+    "override_reasons": [
+      "the banking-trojan capability kit (accessibility service + device admin + SMS interception)",
+      "Indian bank apps referenced in the code or manifest"
+    ],
+    "reconciliation_note": "The ML classifier scored this sample BENIGN, but the deterministic banking-fraud rules found the banking-trojan capability kit (accessibility service + device admin + SMS interception) and Indian bank apps referenced in the code or manifest. BIND_ACCESSIBILITY_SERVICE, BIND_NOTIFICATION_LISTENER_SERVICE and BIND_DEVICE_ADMIN are outside the model's training vocabulary, so the rule engine is the more reliable signal here. Severity is raised to at least MEDIUM so a known-blind model cannot bury the finding.",
+    "composite_score": 62.91,
+    "severity": "HIGH",
+    "severity_floor_applied": false,
+    "decomposition": [
+      {
+        "signal": "ml_confidence",
+        "sub_score": 0.0118,
+        "weight": 0.35,
+        "contribution": 0.41
+      },
+      {
+        "signal": "fraud_signals",
+        "sub_score": 0.9,
+        "weight": 0.25,
+        "contribution": 22.5
+      },
+      {
+        "signal": "attribution",
+        "sub_score": 1.0,
+        "weight": 0.2,
+        "contribution": 20.0
+      },
+      {
+        "signal": "evasion",
+        "sub_score": 1.0,
+        "weight": 0.1,
+        "contribution": 10.0
+      },
+      {
+        "signal": "targeting",
+        "sub_score": 1.0,
+        "weight": 0.1,
+        "contribution": 10.0
+      }
+    ],
+    "completeness_factor": 1.0,
+    "recommended_response": "Expedited investigation and stakeholder notification"
+  },
+  "cache_hit": false,
+  "narrative": {
+    "executive_summary": "Verdict: SUSPICIOUS (rule-driven). The ML classifier alone said BENIGN at 99%; the banking-fraud rules overruled it. The sample carries a composite risk score of 62.91 (HIGH). OTP-interception risk is rated HIGH. Targeting analysis identifies ICICI iMobile Pay, SBI YONO, HDFC MobileBanking, Paytm. Certificate attribution: SpyNote. 16 MITRE ATT&CK for Mobile techniques were mapped from static evidence. Recommended response: HIGH handling.",
+    "attack_chain_narrative": "Reconstructed attack chain from static evidence:\n  - [T1412] Capture SMS Messages \u2014 evidence: READ_SMS + RECEIVE_SMS declared\n  - [T1417] Input Capture \u2014 evidence: Accessibility service binding declared\n  - [T1418] Software Discovery \u2014 evidence: Enumerates installed packages\n  - [T1416] Input Injection \u2014 evidence: Draw-over-other-apps (overlay) permission\n  - [T1401] Device Administrator Permissions \u2014 evidence: Device admin binding declared\n  - [T1474] Supply Chain Compromise \u2014 evidence: Can install further packages (dropper)\n  - [T1437] Application Layer Protocol \u2014 evidence: Network access declared\n  - [T1429] Audio Capture \u2014 evidence: Microphone access declared\n  - [T1512] Video Capture \u2014 evidence: Camera access declared\n  - [T1433] Access Call Log \u2014 evidence: Call log access declared\n  - [T1430] Location Tracking \u2014 evidence: Fine location access declared\n  - [T1636] Protected User Data: Contacts \u2014 evidence: Contact list access declared\n  - [T1409] Stored Application Data \u2014 evidence: External storage read access\n  - [T1624] Event Triggered Execution \u2014 evidence: Auto-start on device boot\n  - [T1541] Foreground Persistence \u2014 evidence: Persistent foreground service\n  - [T1417.002] GUI Input Capture \u2014 evidence: Overlay permission combined with Indian banking app targeting",
+    "key_findings": [
+      "Verdict SUSPICIOUS (rule-driven) (ML label BENIGN at 99% calibrated confidence)",
+      "OTP interception risk HIGH: Banking-trojan capability kit: accessibility service + device admin + SMS interception declared together; Accessibility abuse: BIND_ACCESSIBILITY_SERVICE; Device admin: BIND_DEVICE_ADMIN",
+      "Indian banking apps targeted: ICICI iMobile Pay, SBI YONO, HDFC MobileBanking, Paytm",
+      "Evasion: Emulator fingerprint checks, Debugger detection, Reflection-based API concealment",
+      "ATT&CK techniques mapped: T1412, T1417, T1418, T1416, T1401, T1474, T1437, T1429, T1512, T1433, T1430, T1636, T1409, T1624, T1541, T1417.002"
+    ],
+    "recommended_actions": [
+      "Block the listed IOCs (package name, certificate fingerprint, any C2 hosts) at the mobile-threat and network perimeter.",
+      "Issue a customer advisory for ICICI iMobile Pay, SBI YONO, HDFC MobileBanking, Paytm covering fake-overlay login screens.",
+      "Search fraud logs for transactions from devices matching these indicators.",
+      "File the CERT-In notification below if the sample is novel or widespread."
+    ],
+    "cert_in_draft": {
+      "incident_title": "Android banking trojan sample \u2014 HIGH severity",
+      "incident_category": "Malware",
+      "affected_sector": "BFSI",
+      "severity": "HIGH",
+      "sample_hash_sha256": "77d107b98f8fd794061c5d8fe632e1e0fa7feaca4c602bff3cc9ec841eedd6bb",
+      "malware_family": "SpyNote",
+      "targeted_institutions": [
+        "ICICI iMobile Pay",
+        "SBI YONO",
+        "HDFC MobileBanking",
+        "Paytm"
+      ],
+      "attack_vectors": [
+        "Capture SMS Messages",
+        "Input Capture",
+        "Software Discovery",
+        "Input Injection",
+        "Device Administrator Permissions",
+        "Supply Chain Compromise",
+        "Application Layer Protocol",
+        "Audio Capture",
+        "Video Capture",
+        "Access Call Log",
+        "Location Tracking",
+        "Protected User Data: Contacts",
+        "Stored Application Data",
+        "Event Triggered Execution",
+        "Foreground Persistence",
+        "GUI Input Capture"
+      ],
+      "recommended_mitigations": [
+        "Block listed IOCs at perimeter and MTD platform",
+        "Customer advisory on overlay phishing and OTP disclosure",
+        "Monitor for transactions correlated with these indicators"
+      ],
+      "reporting_urgency": "EXPEDITED",
+      "reporting_institution": "[ANALYST TO COMPLETE]",
+      "analyst_review_note": "DRAFT \u2014 verify all fields and IOCs before submission."
+    },
+    "generation_metadata": {
+      "mode": "TEMPLATE",
+      "model": null,
+      "label": "[TEMPLATE \u2014 deterministic, no LLM call]",
+      "fallback_used": true,
+      "reason": "demo cases use the deterministic template so they work offline; uploads use the live LLM when a key is configured"
+    },
+    "source_bundle": {
+      "sample_hashes": {
+        "md5": "f0cdc9761a2e6ec86d5b792466f757f6",
+        "sha1": "09c6afbdf9d149b0373c34494925b2723e9bbc8b",
+        "sha256": "77d107b98f8fd794061c5d8fe632e1e0fa7feaca4c602bff3cc9ec841eedd6bb"
+      },
+      "package": "com.sbi.secure.update",
+      "verdict": {
+        "headline": "SUSPICIOUS (rule-driven)",
+        "ml_label": "BENIGN",
+        "ml_confidence": 0.9882,
+        "ml_rule_disagreement": true,
+        "rule_override_reasons": [
+          "the banking-trojan capability kit (accessibility service + device admin + SMS interception)",
+          "Indian bank apps referenced in the code or manifest"
+        ]
+      },
+      "banking_trojan_kit": {
+        "complete": true,
+        "overlay_kit_without_admin": false
+      },
+      "shap_top_features": [
+        {
+          "feature": "REQUEST_INSTALL_PACKAGES",
+          "full_name": "android.permission.REQUEST_INSTALL_PACKAGES",
+          "contribution": -2.5856,
+          "present": true
+        },
+        {
+          "feature": "SEND_SMS",
+          "full_name": "android.permission.SEND_SMS",
+          "contribution": 2.0427,
+          "present": true
+        },
+        {
+          "feature": "FOREGROUND_SERVICE",
+          "full_name": "android.permission.FOREGROUND_SERVICE",
+          "contribution": -1.603,
+          "present": true
+        },
+        {
+          "feature": "RECEIVE_USER_PRESENT",
+          "full_name": "android.permission.RECEIVE_USER_PRESENT",
+          "contribution": -1.5534,
+          "present": true
+        },
+        {
+          "feature": "READ_EXTERNAL_STORAGE",
+          "full_name": "android.permission.READ_EXTERNAL_STORAGE",
+          "contribution": -1.4887,
+          "present": true
+        },
+        {
+          "feature": "DISABLE_KEYGUARD",
+          "full_name": "android.permission.DISABLE_KEYGUARD",
+          "contribution": -1.3173,
+          "present": true
+        },
+        {
+          "feature": "GET_TASKS",
+          "full_name": "android.permission.GET_TASKS",
+          "contribution": 1.1812,
+          "present": true
+        },
+        {
+          "feature": "CAMERA",
+          "full_name": "android.permission.CAMERA",
+          "contribution": -1.104,
+          "present": true
+        }
+      ],
+      "otp_interception": {
+        "risk": "HIGH",
+        "signals": [
+          "Banking-trojan capability kit: accessibility service + device admin + SMS interception declared together",
+          "Accessibility abuse: BIND_ACCESSIBILITY_SERVICE",
+          "Device admin: BIND_DEVICE_ADMIN",
+          "Sms interception: READ_SMS, RECEIVE_SMS",
+          "Notification interception: BIND_NOTIFICATION_LISTENER_SERVICE",
+          "Overlay: SYSTEM_ALERT_WINDOW",
+          "App enumeration: GET_TASKS, QUERY_ALL_PACKAGES",
+          "Lock screen control: DISABLE_KEYGUARD",
+          "Fraud actions: SEND_SMS",
+          "Full OTP-interception triplet declared: READ_SMS + RECEIVE_SMS + BIND_NOTIFICATION_LISTENER_SERVICE",
+          "Surveillance capability: ACCESS_FINE_LOCATION",
+          "Surveillance capability: CAMERA",
+          "Surveillance capability: READ_CALL_LOG",
+          "Surveillance capability: READ_CONTACTS",
+          "Surveillance capability: RECORD_AUDIO",
+          "Targets Indian bank app: ICICI iMobile Pay (com.csam.icici.bank.imobile) via DEX string constant",
+          "Targets Indian bank app: SBI YONO (com.sbi.lotusintouch) via DEX string constant",
+          "Targets Indian bank app: HDFC MobileBanking (com.snapwork.hdfc) via DEX string constant",
+          "Targets Indian bank app: Paytm (net.one97.paytm) via DEX string constant"
+        ],
+        "target_banks": [
+          "ICICI iMobile Pay",
+          "SBI YONO",
+          "HDFC MobileBanking",
+          "Paytm"
+        ]
+      },
+      "attribution": {
+        "certificate_confidence": "HIGH",
+        "related_families": [
+          "SpyNote"
+        ]
+      },
+      "attack_techniques": [
+        {
+          "id": "T1412",
+          "name": "Capture SMS Messages",
+          "tactic": "Collection",
+          "evidence": "READ_SMS + RECEIVE_SMS declared"
+        },
+        {
+          "id": "T1417",
+          "name": "Input Capture",
+          "tactic": "Collection",
+          "evidence": "Accessibility service binding declared"
+        },
+        {
+          "id": "T1418",
+          "name": "Software Discovery",
+          "tactic": "Discovery",
+          "evidence": "Enumerates installed packages"
+        },
+        {
+          "id": "T1416",
+          "name": "Input Injection",
+          "tactic": "Impact",
+          "evidence": "Draw-over-other-apps (overlay) permission"
+        },
+        {
+          "id": "T1401",
+          "name": "Device Administrator Permissions",
+          "tactic": "Persistence",
+          "evidence": "Device admin binding declared"
+        },
+        {
+          "id": "T1474",
+          "name": "Supply Chain Compromise",
+          "tactic": "Initial Access",
+          "evidence": "Can install further packages (dropper)"
+        },
+        {
+          "id": "T1437",
+          "name": "Application Layer Protocol",
+          "tactic": "Command and Control",
+          "evidence": "Network access declared"
+        },
+        {
+          "id": "T1429",
+          "name": "Audio Capture",
+          "tactic": "Collection",
+          "evidence": "Microphone access declared"
+        },
+        {
+          "id": "T1512",
+          "name": "Video Capture",
+          "tactic": "Collection",
+          "evidence": "Camera access declared"
+        },
+        {
+          "id": "T1433",
+          "name": "Access Call Log",
+          "tactic": "Collection",
+          "evidence": "Call log access declared"
+        },
+        {
+          "id": "T1430",
+          "name": "Location Tracking",
+          "tactic": "Discovery",
+          "evidence": "Fine location access declared"
+        },
+        {
+          "id": "T1636",
+          "name": "Protected User Data: Contacts",
+          "tactic": "Collection",
+          "evidence": "Contact list access declared"
+        },
+        {
+          "id": "T1409",
+          "name": "Stored Application Data",
+          "tactic": "Collection",
+          "evidence": "External storage read access"
+        },
+        {
+          "id": "T1624",
+          "name": "Event Triggered Execution",
+          "tactic": "Persistence",
+          "evidence": "Auto-start on device boot"
+        },
+        {
+          "id": "T1541",
+          "name": "Foreground Persistence",
+          "tactic": "Persistence",
+          "evidence": "Persistent foreground service"
+        },
+        {
+          "id": "T1417.002",
+          "name": "GUI Input Capture",
+          "tactic": "Collection",
+          "evidence": "Overlay permission combined with Indian banking app targeting"
+        }
+      ],
+      "evasion": {
+        "sophistication": "HIGH",
+        "techniques": [
+          "Emulator fingerprint checks",
+          "Debugger detection",
+          "Reflection-based API concealment",
+          "Runtime DEX loading",
+          "Runtime string/payload decryption"
+        ]
+      },
+      "risk_score": {
+        "composite": 62.91,
+        "severity": "HIGH"
+      }
+    }
+  }
+}

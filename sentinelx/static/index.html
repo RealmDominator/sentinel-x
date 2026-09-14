@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SENTINEL-X</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7.8.5/dist/d3.min.js"></script>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#151b24; --panel2:#1b232e; --line:#252e3a;
+    --txt:#e6edf3; --dim:#8b98a9; --accent:#4c8dff;
+    --crit:#ff4d5e; --high:#ff8c3b; --med:#ffc93c; --low:#3fd68a;
+    --mono:ui-monospace,"SFMono-Regular",Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);
+       font:14px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
+  header{padding:18px 28px;border-bottom:1px solid var(--line);
+         display:flex;align-items:center;gap:16px;background:var(--panel);}
+  .logo{font-weight:700;font-size:18px;letter-spacing:.14em}
+  .logo span{color:var(--accent)}
+  .tag{font-size:11px;color:var(--dim);border:1px solid var(--line);
+       padding:3px 9px;border-radius:20px}
+  .spacer{flex:1}
+  main{max-width:1240px;margin:0 auto;padding:24px 28px 80px}
+
+  .drop{border:2px dashed var(--line);border-radius:14px;padding:34px;text-align:center;
+        background:var(--panel);transition:.15s;cursor:pointer}
+  .drop:hover,.drop.over{border-color:var(--accent);background:var(--panel2)}
+  .drop h2{margin:0 0 6px;font-size:17px}
+  .drop p{margin:0;color:var(--dim);font-size:13px}
+  .row{display:flex;gap:10px;justify-content:center;margin-top:14px;flex-wrap:wrap}
+  button{background:var(--accent);color:#fff;border:0;border-radius:8px;
+         padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer}
+  button.ghost{background:transparent;border:1px solid var(--line);color:var(--txt)}
+  button:hover{filter:brightness(1.12)}
+  button:disabled{opacity:.5;cursor:not-allowed}
+
+  .grid{display:grid;gap:16px;margin-top:20px}
+  .g2{grid-template-columns:repeat(auto-fit,minmax(min(400px,100%),1fr))}
+  .g2 > .card{min-width:0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px}
+  .card h3{margin:0 0 14px;font-size:12px;text-transform:uppercase;
+           letter-spacing:.1em;color:var(--dim);font-weight:600}
+
+  .verdict{display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+  .score{width:104px;height:104px;border-radius:50%;display:grid;place-items:center;
+         flex-direction:column;border:5px solid var(--line);flex-shrink:0}
+  .score b{font-size:27px;line-height:1}
+  .score small{font-size:10px;color:var(--dim)}
+  .vinfo h1{margin:0 0 4px;font-size:25px}
+  .vinfo p{margin:0;color:var(--dim);font-size:13px}
+  .pill{display:inline-block;padding:3px 11px;border-radius:20px;font-size:11px;
+        font-weight:700;letter-spacing:.06em}
+  .CRITICAL{background:rgba(255,77,94,.16);color:var(--crit)}
+  .HIGH{background:rgba(255,140,59,.16);color:var(--high)}
+  .MEDIUM{background:rgba(255,201,60,.16);color:var(--med)}
+  .LOW,.NONE{background:rgba(63,214,138,.16);color:var(--low)}
+
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:7px 9px;border-bottom:1px solid var(--line);
+        vertical-align:top}
+  th{color:var(--dim);font-weight:600;font-size:11px;text-transform:uppercase;
+     letter-spacing:.06em}
+  td.mono,.mono{font-family:var(--mono);font-size:11.5px;word-break:break-all}
+
+  .kv{display:grid;grid-template-columns:150px 1fr;gap:6px 14px;font-size:13px}
+  .kv div:nth-child(odd){color:var(--dim)}
+  ul.clean{margin:0;padding-left:18px}
+  ul.clean li{margin-bottom:5px}
+
+  .tech{display:inline-block;background:var(--panel2);border:1px solid var(--line);
+        border-radius:7px;padding:7px 11px;margin:0 6px 6px 0;font-size:12px}
+  .tech b{color:var(--accent);font-family:var(--mono)}
+  .tech small{display:block;color:var(--dim);font-size:10.5px;margin-top:2px}
+
+  .banner{padding:9px 13px;border-radius:8px;font-size:12px;margin-bottom:12px}
+  .ai{background:rgba(76,141,255,.1);border:1px solid rgba(76,141,255,.3);color:#a8c7ff}
+  .warn{background:rgba(255,201,60,.09);border:1px solid rgba(255,201,60,.3);color:#ffe08a}
+  .err{background:rgba(255,77,94,.1);border:1px solid rgba(255,77,94,.35);color:#ffb3ba}
+  pre.narr{white-space:pre-wrap;font-family:inherit;font-size:13px;margin:0;color:#cdd7e2}
+  #graph{width:100%;height:330px}
+  /* Chart.js with maintainAspectRatio:false sizes to its parent; the parent must have
+     a fixed height or the chart and page grow without bound. */
+  .chartbox{position:relative;height:280px;width:100%}
+  .hidden{display:none}
+  .status{text-align:center;color:var(--dim);padding:30px;font-size:13px}
+  .foot{margin-top:26px;color:var(--dim);font-size:11.5px;text-align:center}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">SENTINEL<span>-X</span></div>
+  <div class="tag">Android Banking Malware Intelligence</div>
+  <div class="spacer"></div>
+  <div class="tag" id="modelTag">model: loading…</div>
+</header>
+
+<main>
+  <div class="drop" id="drop">
+    <h2>Drop a suspicious <code>.apk</code> here</h2>
+    <p>Static analysis only — the sample is never executed.</p>
+    <div class="row">
+      <button id="pick">Choose file</button>
+      <button class="ghost" id="demoBtn">Load demo case</button>
+    </div>
+    <input type="file" id="file" accept=".apk" hidden>
+    <div class="row hidden" id="demoPicker"></div>
+  </div>
+
+  <div id="status" class="status hidden"></div>
+  <div id="results" class="hidden"></div>
+
+  <div class="foot">
+    SENTINEL-X prototype · PSB Cybersecurity, Fraud &amp; AI Hackathon 2026 · Problem Statement 1
+  </div>
+</main>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let charts = [];
+
+fetch('/api/health').then(r=>r.json()).then(h=>{
+  const m = h.model_metrics;
+  $('#modelTag').textContent = m
+    ? `model: XGBoost · F1 ${m.f1} · FPR ${m.false_positive_rate}`
+    : 'model: not trained';
+}).catch(()=>{ $('#modelTag').textContent='backend offline'; });
+
+// ---- upload wiring ----
+const drop = $('#drop'), fileInput = $('#file');
+$('#pick').onclick = e => { e.stopPropagation(); fileInput.click(); };
+drop.onclick = () => fileInput.click();
+fileInput.onchange = () => fileInput.files[0] && upload(fileInput.files[0]);
+['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e => {
+  e.preventDefault(); drop.classList.add('over'); }));
+['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => {
+  e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', e => {
+  const f = e.dataTransfer.files[0]; if (f) upload(f); });
+
+$('#demoBtn').onclick = async e => {
+  e.stopPropagation();
+  try {
+    const demos = (await (await fetch('/api/cases')).json()).filter(c => c.demo)
+      .sort((a, b) => (b.score ?? 0) - (a.score ?? 0));   // most instructive first
+    if (!demos.length) return setStatus('No demo case available. Run scripts/make_demo.py', true);
+    const picker = $('#demoPicker');
+    picker.innerHTML = demos.map(d => `<button class="ghost" data-id="${esc(d.case_id)}">
+      ${esc(d.filename.replace(/^DEMO_|\.apk$/g, '').replace(/_/g, ' '))}
+      <span class="pill ${esc(d.severity)}">${esc(d.severity)} ${d.score}</span></button>`).join('');
+    picker.classList.remove('hidden');
+    picker.querySelectorAll('button').forEach(b => b.onclick = ev => {
+      ev.stopPropagation(); loadCase(b.dataset.id); });
+    loadCase(demos[0].case_id);
+  } catch (err) { setStatus('Could not load demo: ' + err.message, true); }
+};
+
+async function loadCase(id) {
+  setStatus('Loading case…');
+  try { render(await (await fetch(`/api/cases/${id}`)).json()); }
+  catch (err) { setStatus('Could not load case: ' + err.message, true); }
+}
+
+function setStatus(msg, isErr) {
+  const el = $('#status');
+  el.className = 'status' + (isErr ? ' err' : '');
+  el.textContent = msg; el.classList.remove('hidden');
+  if (isErr) $('#results').classList.add('hidden');
+}
+
+async function upload(f) {
+  setStatus(`Analysing ${f.name} — unpacking, classifying, attributing…`);
+  $('#results').classList.add('hidden');
+  const fd = new FormData(); fd.append('file', f);
+  try {
+    const r = await fetch('/api/analyze', { method:'POST', body: fd });
+    const j = await r.json();
+    if (!r.ok) return setStatus(j.detail || 'Analysis failed', true);
+    render(j);
+  } catch (err) { setStatus('Request failed: ' + err.message, true); }
+}
+
+// ---- rendering ----
+function render(c) {
+  $('#status').classList.add('hidden');
+  charts.forEach(ch => ch.destroy()); charts = [];
+
+  const risk = c.risk, cls = c.classification, fr = c.fraud,
+        nar = c.narrative || {}, meta = nar.generation_metadata || {},
+        ev = c.evasion, at = c.attack, attr = c.attribution;
+  const sev = risk.severity;
+  const sevColor = {CRITICAL:'#ff4d5e',HIGH:'#ff8c3b',MEDIUM:'#ffc93c',LOW:'#3fd68a'}[sev];
+
+  $('#results').innerHTML = `
+    <div class="card" style="margin-top:20px">
+      <div class="verdict">
+        <div class="score" style="border-color:${sevColor}">
+          <b style="color:${sevColor}">${risk.composite_score}</b><small>/ 100</small>
+        </div>
+        <div class="vinfo">
+          <h1>${esc(risk.headline_verdict || cls.verdict)} <span class="pill ${sev}">${sev}</span></h1>
+          <p>ML label ${esc(cls.verdict)} @ ${(cls.confidence*100).toFixed(1)}% calibrated ·
+             ${esc(c.filename||'')} ${c.cache_hit?'· <b>cache hit</b>':''}</p>
+          <p style="margin-top:6px">${esc(risk.recommended_response)}</p>
+        </div>
+        <div class="spacer"></div>
+        <div class="row" style="margin:0">
+          <button onclick="location.href='/api/cases/${c.case_id}/report.pdf'">PDF report</button>
+          <button class="ghost" onclick="location.href='/api/cases/${c.case_id}/iocs.json'">IOC JSON</button>
+          <button class="ghost" onclick="location.href='/api/cases/${c.case_id}/iocs.csv'">IOC CSV</button>
+        </div>
+      </div>
+    </div>
+
+    ${risk.ml_rule_disagreement?`<div class="card" style="margin-top:16px">
+      <div class="banner warn" style="margin:0"><b>ML / rule disagreement</b><br>${esc(risk.reconciliation_note)}</div></div>`:''}
+
+    <div class="grid g2">
+      <div class="card"><h3>Why — SHAP feature contributions</h3>
+        <div class="chartbox"><canvas id="shap"></canvas></div></div>
+      <div class="card"><h3>Composite risk decomposition</h3>
+        <div class="chartbox"><canvas id="risk"></canvas></div></div>
+    </div>
+
+    <div class="grid g2">
+      <div class="card"><h3>OTP interception &amp; bank targeting</h3>
+        <div class="kv">
+          <div>Trojan kit</div><div>${fr.trojan_kit_complete
+              ? '<b style="color:var(--crit)">COMPLETE</b> <small style="color:var(--dim)">accessibility + device admin + SMS</small>'
+              : fr.overlay_kit_without_admin
+              ? '<b style="color:var(--high)">OVERLAY KIT</b> <small style="color:var(--dim)">accessibility + notifications + SMS + overlay</small>'
+              : 'not complete'}</div>
+          <div>Package name</div><div>${fr.package_name_obfuscated
+              ? '<b style="color:var(--high)">machine-generated</b>' : 'normal'}</div>
+          <div>OTP capability</div><div><span class="pill ${fr.otp_interception_risk}">${fr.otp_interception_risk}</span></div>
+          <div>Full OTP triplet</div><div>${fr.otp_triplet_complete?'<b style="color:var(--crit)">YES</b>':'no'}</div>
+          <div>Targeted banks</div><div>${fr.targeted_banks.length
+              ? fr.targeted_banks.map(b=>esc(b.bank)).join(', ') : '<span style="color:var(--dim)">none detected</span>'}</div>
+        </div>
+        ${fr.signals.length?`<h3 style="margin-top:16px">Triggering signals</h3>
+          <ul class="clean">${fr.signals.map(s=>`<li>${esc(s)}</li>`).join('')}</ul>`:''}
+        ${(fr.notes||[]).map(n=>`<div class="banner warn" style="margin:12px 0 0">${esc(n)}</div>`).join('')}
+      </div>
+
+      <div class="card"><h3>Attribution — certificate graph</h3>
+        <div class="kv" style="margin-bottom:10px">
+          <div>Confidence</div><div><span class="pill ${attr.confidence==='NONE'?'LOW':attr.confidence}">${attr.confidence}</span></div>
+          <div>Related families</div><div>${attr.related_families.length?esc(attr.related_families.join(', ')):'<span style="color:var(--dim)">novel — no known linkage</span>'}</div>
+          <div>Signer CN</div><div class="mono">${esc(attr.certificate?.subject_cn||'not extracted')}</div>
+          <div>Self-signed</div><div>${attr.certificate?(attr.certificate.self_signed?'yes':'no'):'—'}</div>
+          <div>Same signer as</div><div>${(attr.shared_signer_samples||[]).length
+              ? attr.shared_signer_samples.map(s=>`${esc(s.package||s.sha256.slice(0,12))} <span class="pill ${s.severity||'LOW'}">${esc(s.severity||'?')}</span>`).join('<br>')
+              : '<span style="color:var(--dim)">no previously analysed sample</span>'}</div>
+        </div>
+        ${(attr.signer_flags||[]).map(f=>`<div class="banner warn">${esc(f.text)}</div>`).join('')}
+        <svg id="graph"></svg>
+      </div>
+    </div>
+
+    <div class="card"><h3>MITRE ATT&amp;CK for Mobile — ${at.technique_count} techniques mapped</h3>
+      ${at.techniques.length ? at.techniques.map(t=>`<span class="tech">
+        <b>${esc(t.id)}</b> ${esc(t.name)}<small>${esc(t.tactic)} · ${esc(t.evidence)}</small></span>`).join('')
+        : '<p style="color:var(--dim)">No techniques mapped from available static evidence.</p>'}
+    </div>
+
+    <div class="card"><h3>Intelligence narrative</h3>
+      <div class="banner ${meta.mode==='AI_GENERATED'?'ai':'warn'}">${esc(meta.label||'')}${
+        meta.reason?` — ${esc(meta.reason)}`:''}</div>
+      <p><b>Executive summary</b></p>
+      <pre class="narr">${esc(nar.executive_summary||'')}</pre>
+      ${nar.key_findings?.length?`<p style="margin-top:14px"><b>Key findings</b></p>
+        <ul class="clean">${nar.key_findings.map(k=>`<li>${esc(k)}</li>`).join('')}</ul>`:''}
+      <p style="margin-top:14px"><b>Attack chain</b></p>
+      <pre class="narr">${esc(nar.attack_chain_narrative||'')}</pre>
+      ${nar.recommended_actions?.length?`<p style="margin-top:14px"><b>Recommended actions</b></p>
+        <ul class="clean">${nar.recommended_actions.map(a=>`<li>${esc(a)}</li>`).join('')}</ul>`:''}
+    </div>
+
+    <div class="grid g2">
+      <div class="card"><h3>Evasion profile &amp; blind spots</h3>
+        <div class="kv"><div>Sophistication</div>
+          <div><span class="pill ${ev.sophistication==='NONE'?'LOW':ev.sophistication}">${ev.sophistication}</span></div></div>
+        ${ev.techniques_detected.length?`<ul class="clean" style="margin-top:10px">${
+          ev.techniques_detected.map(t=>`<li>${esc(t.label)}${t.strength==='weak'
+            ?' <small style="color:var(--dim)">(common in benign apps)</small>':''}</li>`).join('')}</ul>`:''}
+        <h3 style="margin-top:16px">What static analysis could NOT see</h3>
+        <ul class="clean">${ev.blind_spots.map(b=>`<li>${esc(b)}</li>`).join('')}</ul>
+      </div>
+
+      <div class="card"><h3>Sample &amp; indicators</h3>
+        <div class="kv">
+          <div>Package</div><div class="mono">${esc(c.package||'not determined')}</div>
+          <div>SHA256</div><div class="mono">${esc(c.hashes.sha256)}</div>
+          <div>MD5</div><div class="mono">${esc(c.hashes.md5)}</div>
+          <div>Size</div><div>${(c.file_size_bytes/1024).toFixed(0)} KB</div>
+          <div>Completeness</div><div>${esc(c.analysis_completeness)}</div>
+          <div>Permissions</div><div>${c.signals.permissions.length}</div>
+        </div>
+        ${c.signals.urls?.length?`<h3 style="margin-top:16px">Candidate URLs</h3>
+          <ul class="clean mono">${c.signals.urls.slice(0,8).map(u=>`<li>${esc(u)}</li>`).join('')}</ul>`:''}
+      </div>
+    </div>
+
+    <div class="card"><h3>CERT-In incident report (draft)</h3>
+      <div class="banner ${meta.mode==='AI_GENERATED'?'ai':'warn'}">${esc(meta.label||'')}</div>
+      <table>${Object.entries(nar.cert_in_draft||{}).map(([k,v])=>`<tr>
+        <th style="width:210px">${esc(k.replace(/_/g,' '))}</th>
+        <td>${esc(Array.isArray(v)?v.join(', '):v)}</td></tr>`).join('')}</table>
+    </div>`;
+
+  $('#results').classList.remove('hidden');
+  drawShap(cls.shap_top_features);
+  drawRisk(risk.decomposition);
+  drawGraph(attr.graph);
+  window.scrollTo({top: 220, behavior:'smooth'});
+}
+
+const chartOpts = extra => Object.assign({
+  responsive:true, maintainAspectRatio:false,
+  plugins:{legend:{display:false}},
+}, extra);
+
+function drawShap(feats) {
+  if (!feats?.length) return;
+  const f = feats.slice(0,10).reverse();
+  charts.push(new Chart($('#shap'), {
+    type:'bar',
+    data:{ labels: f.map(x=>x.feature),
+      datasets:[{ data: f.map(x=>x.contribution),
+        backgroundColor: f.map(x=>x.contribution>0?'#ff6b7a':'#3fd68a') }]},
+    options: chartOpts({ indexAxis:'y',
+      scales:{ x:{grid:{color:'#252e3a'},ticks:{color:'#8b98a9'},
+                  title:{display:true,text:'← benign      SHAP value      malicious →',
+                         color:'#8b98a9',font:{size:10}}},
+               y:{grid:{display:false},ticks:{color:'#e6edf3',font:{size:10}}}},
+      plugins:{legend:{display:false},tooltip:{callbacks:{
+        label:i=>`${i.raw>0?'+':''}${i.raw} (${f[i.dataIndex].present?'declared':'absent'})`}}}})
+  }));
+}
+
+function drawRisk(dec) {
+  charts.push(new Chart($('#risk'), {
+    type:'bar',
+    data:{ labels: dec.map(d=>d.signal.replace(/_/g,' ')),
+      datasets:[{ data: dec.map(d=>d.contribution), backgroundColor:'#4c8dff' }]},
+    options: chartOpts({
+      scales:{ y:{grid:{color:'#252e3a'},ticks:{color:'#8b98a9'},
+                  title:{display:true,text:'weighted points',color:'#8b98a9',font:{size:10}}},
+               x:{grid:{display:false},ticks:{color:'#e6edf3',font:{size:10}}}},
+      plugins:{legend:{display:false},tooltip:{callbacks:{
+        label:i=>`${i.raw.toFixed(2)} pts (sub-score ${dec[i.dataIndex].sub_score}, weight ${(dec[i.dataIndex].weight*100)}%)`}}}})
+  }));
+}
+
+function drawGraph(g) {
+  const svg = d3.select('#graph'); svg.selectAll('*').remove();
+  if (!g?.nodes?.length) {
+    svg.append('text').attr('x','50%').attr('y','50%').attr('fill','#8b98a9')
+       .attr('text-anchor','middle').attr('font-size',12)
+       .text('No certificate relationships to display');
+    return;
+  }
+  const w = svg.node().clientWidth || 520, h = 330;
+  const color = n => n.kind==='sample' ? '#4c8dff'
+                   : n.kind==='prior_sample' ? '#9b7bff'
+                   : n.kind==='family' ? '#ff8c3b'
+                   : n.known ? '#ff4d5e' : '#8b98a9';
+  const nodes = g.nodes.map(d=>({...d})), links = g.links.map(d=>({...d}));
+
+  const sim = d3.forceSimulation(nodes)
+    .force('link', d3.forceLink(links).id(d=>d.id).distance(80))
+    .force('charge', d3.forceManyBody().strength(-260))
+    .force('center', d3.forceCenter(w/2, h/2))
+    .force('collide', d3.forceCollide(26));
+
+  const link = svg.append('g').attr('stroke','#252e3a').attr('stroke-width',1.4)
+    .selectAll('line').data(links).join('line');
+  const node = svg.append('g').selectAll('circle').data(nodes).join('circle')
+    .attr('r', d=>d.kind==='sample'?11:d.kind==='family'?9:7)
+    .attr('fill', color).attr('stroke','#0d1117').attr('stroke-width',2)
+    .call(d3.drag()
+      .on('start',(e,d)=>{ if(!e.active) sim.alphaTarget(.3).restart(); d.fx=d.x; d.fy=d.y; })
+      .on('drag',(e,d)=>{ d.fx=e.x; d.fy=e.y; })
+      .on('end',(e,d)=>{ if(!e.active) sim.alphaTarget(0); d.fx=null; d.fy=null; }));
+  node.append('title').text(d=>`${d.kind}: ${d.label||d.id}`);
+  const label = svg.append('g').selectAll('text').data(nodes).join('text')
+    .text(d=>(d.label||d.id).slice(0,18)).attr('font-size',10).attr('fill','#8b98a9')
+    .attr('text-anchor','middle').attr('dy',-13);
+
+  sim.on('tick', () => {
+    link.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y)
+        .attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);
+    node.attr('cx',d=>d.x=Math.max(14,Math.min(w-14,d.x)))
+        .attr('cy',d=>d.y=Math.max(14,Math.min(h-14,d.y)));
+    label.attr('x',d=>d.x).attr('y',d=>d.y);
+  });
+}
+</script>
+</body>
+</html>

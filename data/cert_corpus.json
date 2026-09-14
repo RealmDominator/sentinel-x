@@ -1,0 +1,138 @@
+{
+  "_note": "Real signing certificates from the corpus half of a MalwareBazaar split (see scripts/real_world_eval.py).",
+  "certificates": [
+    {
+      "sha256": "a40da80a59d170caa950cf15c18c454d47a39b26989d8b640ecd745ba71bf5dc",
+      "subject_cn": "Android",
+      "family": "Cerberus",
+      "source": "MalwareBazaar",
+      "sample_sha256": "a52d2105d680d029f9cc5c9c77f639e47ae520e41ce7294bbad77b8f2931796a"
+    },
+    {
+      "sha256": "09fbaba855c5969906770697433a8a2bb43adc22f7b2619b5be19e6e90656575",
+      "subject_cn": "Android",
+      "family": "Anubis",
+      "source": "MalwareBazaar",
+      "sample_sha256": "d17d2f0ab340d52c83e59d3d7d6636d92e15f23a9a70b4f402c5af54cfc291af"
+    },
+    {
+      "sha256": "022a1ed9feb0e6c9826df99c58350b7789a71ad51f142f40449f91d58c0278c1",
+      "subject_cn": "debugging",
+      "family": "Anubis",
+      "source": "MalwareBazaar",
+      "sample_sha256": "c7411c0daff520468c3accff4318076a66034b2d14cbae08a5d3ecec2c6ce9ed"
+    },
+    {
+      "sha256": "e732ded84126fd267be25b2537cd2c058a51a12e111b1c713d52e2f7571011b9",
+      "subject_cn": "Android",
+      "family": "Anubis",
+      "source": "MalwareBazaar",
+      "sample_sha256": "30b0b3b0d4733f3b94517ab4e407214e82abf6aad3adf918717ff842e28d672f"
+    },
+    {
+      "sha256": "eff63390d372cbfc45e4a822181c521f4f15ecf389f70fec68d58a1495cd1e2a",
+      "subject_cn": "ql7RsCkB",
+      "family": "SpyNote",
+      "source": "MalwareBazaar",
+      "sample_sha256": "dea110082d57d210d746c7d9fe791d8e297de82ccd5e48c2813c615a45913e8e"
+    },
+    {
+      "sha256": "f01396ab58b70c9f72af37f4ad83f499b1c09ddca3abd27d98c75f7e39053fc4",
+      "subject_cn": "Cybersecurity",
+      "family": "Hydra",
+      "source": "MalwareBazaar",
+      "sample_sha256": "d300e348a236c6fc23bceae84fdbd6deecf8f41565c032c0d062733fcb066a6e"
+    },
+    {
+      "sha256": "a40da80a59d170caa950cf15c18c454d47a39b26989d8b640ecd745ba71bf5dc",
+      "subject_cn": "Android",
+      "family": "Hydra",
+      "source": "MalwareBazaar",
+      "sample_sha256": "003d2fd8ef8fc9d4765e4bbc650ecd20ef339be94606486629c003f683cb5982"
+    },
+    {
+      "sha256": "a40da80a59d170caa950cf15c18c454d47a39b26989d8b640ecd745ba71bf5dc",
+      "subject_cn": "Android",
+      "family": "Ermac",
+      "source": "MalwareBazaar",
+      "sample_sha256": "d0279f6afa15e29234f752229e9b91312fc118f1c73971a2042e163d586c3792"
+    },
+    {
+      "sha256": "8af70d55c44e685fb12ce417f31d4b40dddd99a6c86b883484f2d4a1c1bbc789",
+      "subject_cn": "zalelukufeho",
+      "family": "Ermac",
+      "source": "MalwareBazaar",
+      "sample_sha256": "32e4dee58ea17addc5df4ffb862ab3a8df1697598cb6437f92de4075665812c2"
+    },
+    {
+      "sha256": "69598b5984bce814b38106f127b66fcc2676308de37345e2f59ed4a46f1fbc76",
+      "subject_cn": "ls",
+      "family": "SOVA",
+      "source": "MalwareBazaar",
+      "sample_sha256": "724a56172f40177da76242ee169ac336b63d5df85889368d1531f593b658606b"
+    },
+    {
+      "sha256": "fac61745dc0903786fb9ede62a962b399f7348f0bb6f899b8332667591033b9c",
+      "subject_cn": "Android Debug",
+      "family": "SOVA",
+      "source": "MalwareBazaar",
+      "sample_sha256": "f3fc80a8793e60a901da44b9ab315931699e64a4f3eddb8aba839fe860de46dc"
+    },
+    {
+      "sha256": "fac61745dc0903786fb9ede62a962b399f7348f0bb6f899b8332667591033b9c",
+      "subject_cn": "Android Debug",
+      "family": "Octo",
+      "source": "MalwareBazaar",
+      "sample_sha256": "ca3da13d69ce07ed9b31314f2404f9c6a2235067406b545d7b00517258cee9d6"
+    },
+    {
+      "sha256": "a40da80a59d170caa950cf15c18c454d47a39b26989d8b640ecd745ba71bf5dc",
+      "subject_cn": "Android",
+      "family": "Octo",
+      "source": "MalwareBazaar",
+      "sample_sha256": "5ad51d421227bc9976e9e9cdb9c37b6461a82e60efe0591a7a7014ec8e1f0379"
+    },
+    {
+      "sha256": "fac61745dc0903786fb9ede62a962b399f7348f0bb6f899b8332667591033b9c",
+      "subject_cn": "Android Debug",
+      "family": "Alien",
+      "source": "MalwareBazaar",
+      "sample_sha256": "39ccc5d7009aefac18891c70a16b857b98481d6f69800075e31900c4dc9ef000"
+    },
+    {
+      "sha256": "a40da80a59d170caa950cf15c18c454d47a39b26989d8b640ecd745ba71bf5dc",
+      "subject_cn": "Android",
+      "family": "Alien",
+      "source": "MalwareBazaar",
+      "sample_sha256": "d0c32e4c17de29509486482e515956033a27982c41c54392f9e0ce826840daec"
+    },
+    {
+      "sha256": "a40da80a59d170caa950cf15c18c454d47a39b26989d8b640ecd745ba71bf5dc",
+      "subject_cn": "Android",
+      "family": "Hookbot",
+      "source": "MalwareBazaar",
+      "sample_sha256": "93aeafe9e0507e8b1cd2ba4910506f2540b8569eab9d905b2bf854a3822bcbac"
+    },
+    {
+      "sha256": "9c73c26dec0c759af6f01b0ec8fe2d8fc0a2326fc17e005d16afecfda522edeb",
+      "subject_cn": "key_s2rhhxh",
+      "family": "BankBot",
+      "source": "MalwareBazaar",
+      "sample_sha256": "8166dfba7fd0b4ad44c8bc91cc0e98fa06b8912e3fca2093900eb58ba79d22d4"
+    },
+    {
+      "sha256": "1d8e0657e7f6386d516ad1c97479aebc4235c014d26c5f549bcdceabdc3b2374",
+      "subject_cn": "Kasoft Technology",
+      "family": "BankBot",
+      "source": "MalwareBazaar",
+      "sample_sha256": "decf0f2e6d42f5da6ef5f77954115e5cbbb8d68edab7151cf34d28a6d49cb9f8"
+    },
+    {
+      "sha256": "a40da80a59d170caa950cf15c18c454d47a39b26989d8b640ecd745ba71bf5dc",
+      "subject_cn": "Android",
+      "family": "BankBot",
+      "source": "MalwareBazaar",
+      "sample_sha256": "d921e4c59b048aa4085712054c1fa0cac28994f8857b519f27a297b8f2c5d77d"
+    }
+  ]
+}

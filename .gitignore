@@ -1,0 +1,30 @@
+# --- Secrets: never commit (template lives in .env.example)
+.env
+.env.*
+!.env.example
+
+# --- Python / tooling caches
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+graphify-out/
+
+# --- Sample APKs and anything derived from uploads
+# Third-party apps (not ours to redistribute) and large; fetch with the documented commands.
+samples/**/*.apk
+samples/**/*.pdf
+# Per-upload analysis cache (regenerated on demand)
+data/cases/*.json
+
+# --- Reproducible downloads
+# NATICUSdroid is re-downloaded by scripts/train_model.py
+data/naticusdroid.csv
+
+# --- OS / editor noise
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/

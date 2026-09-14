@@ -1,0 +1,532 @@
+{
+  "schema_version": 5,
+  "case_id": "a7ba1858-8ccc-5881-914d-2e1e85f69162",
+  "filename": "DEMO_sms_stealer.apk",
+  "analysed_at": "2026-09-14T05:15:43.694460+00:00",
+  "hashes": {
+    "md5": "2bca75673598ef4315326604eefa8e07",
+    "sha1": "3990be51cef97b1a1367c71c9d76f450d377cee8",
+    "sha256": "78194ee14ca98c7b4d9909be90e3f5548c9bfc85cefd9509db513be061210361"
+  },
+  "file_size_bytes": 3145728,
+  "package": "com.fastloan.instant",
+  "analysis_completeness": "FULL",
+  "notes": [
+    "DEMO CASE \u2014 analysis modules are real; APK parsing was substituted with a crafted permission profile."
+  ],
+  "is_demo": true,
+  "signals": {
+    "package": "com.fastloan.instant",
+    "permissions": [
+      "android.permission.INTERNET",
+      "android.permission.READ_SMS",
+      "android.permission.RECEIVE_SMS",
+      "android.permission.SEND_SMS",
+      "android.permission.READ_CONTACTS",
+      "android.permission.READ_PHONE_STATE",
+      "android.permission.RECEIVE_BOOT_COMPLETED",
+      "android.permission.READ_EXTERNAL_STORAGE",
+      "android.permission.CAMERA",
+      "android.permission.ACCESS_FINE_LOCATION",
+      "android.permission.RECEIVE_BOOT_COMPLETED"
+    ],
+    "short_permissions": [
+      "ACCESS_FINE_LOCATION",
+      "CAMERA",
+      "INTERNET",
+      "READ_CONTACTS",
+      "READ_EXTERNAL_STORAGE",
+      "READ_PHONE_STATE",
+      "READ_SMS",
+      "RECEIVE_BOOT_COMPLETED",
+      "RECEIVE_SMS",
+      "SEND_SMS"
+    ],
+    "activities": [],
+    "services": [],
+    "receivers": [],
+    "referenced_packages": [
+      "com.fastloan.instant"
+    ],
+    "string_referenced_packages": [],
+    "urls": [
+      "http://loan-collect.example-demo.invalid/upload"
+    ],
+    "ips": [],
+    "n_strings": 0
+  },
+  "classification": {
+    "verdict": "MALICIOUS",
+    "confidence": 0.9706,
+    "malicious_probability": 0.9706,
+    "shap_top_features": [
+      {
+        "feature": "SEND_SMS",
+        "full_name": "android.permission.SEND_SMS",
+        "contribution": 2.2706,
+        "present": true
+      },
+      {
+        "feature": "RECEIVE_BOOT_COMPLETED",
+        "full_name": "android.permission.RECEIVE_BOOT_COMPLETED",
+        "contribution": 2.1864,
+        "present": true
+      },
+      {
+        "feature": "READ_EXTERNAL_STORAGE",
+        "full_name": "android.permission.READ_EXTERNAL_STORAGE",
+        "contribution": -1.4038,
+        "present": true
+      },
+      {
+        "feature": "CAMERA",
+        "full_name": "android.permission.CAMERA",
+        "contribution": -1.1515,
+        "present": true
+      },
+      {
+        "feature": "READ_PHONE_STATE",
+        "full_name": "android.permission.READ_PHONE_STATE",
+        "contribution": 1.0223,
+        "present": true
+      },
+      {
+        "feature": "ACCESS_NETWORK_STATE",
+        "full_name": "android.permission.ACCESS_NETWORK_STATE",
+        "contribution": -0.6807,
+        "present": false
+      },
+      {
+        "feature": "RECEIVE",
+        "full_name": "com.google.android.c2dm.permission.RECEIVE",
+        "contribution": 0.5796,
+        "present": false
+      },
+      {
+        "feature": "READ_SMS",
+        "full_name": "android.permission.READ_SMS",
+        "contribution": -0.5705,
+        "present": true
+      },
+      {
+        "feature": "ACCESS_COARSE_LOCATION",
+        "full_name": "android.permission.ACCESS_COARSE_LOCATION",
+        "contribution": -0.5581,
+        "present": false
+      },
+      {
+        "feature": "RECEIVE_SMS",
+        "full_name": "android.permission.RECEIVE_SMS",
+        "contribution": 0.4995,
+        "present": true
+      },
+      {
+        "feature": "WRITE_EXTERNAL_STORAGE",
+        "full_name": "android.permission.WRITE_EXTERNAL_STORAGE",
+        "contribution": 0.3603,
+        "present": false
+      },
+      {
+        "feature": "INSTALL_SHORTCUT",
+        "full_name": "com.android.launcher.permission.INSTALL_SHORTCUT",
+        "contribution": -0.2763,
+        "present": false
+      },
+      {
+        "feature": "GET_TASKS",
+        "full_name": "android.permission.GET_TASKS",
+        "contribution": -0.2303,
+        "present": false
+      },
+      {
+        "feature": "BILLING",
+        "full_name": "com.android.vending.BILLING",
+        "contribution": 0.2241,
+        "present": false
+      },
+      {
+        "feature": "READ_CONTACTS",
+        "full_name": "android.permission.READ_CONTACTS",
+        "contribution": 0.2165,
+        "present": true
+      }
+    ]
+  },
+  "attribution": {
+    "certificate": {
+      "sha256": "def0f3b990dcd4375597b65ebc169f1965609fcd49999e0fb7230d18f1ce4603",
+      "subject_cn": "unknown-signer",
+      "issuer_cn": "unknown-signer",
+      "self_signed": true,
+      "serial": "1"
+    },
+    "related_families": [],
+    "confidence": "NONE",
+    "signer_flags": [],
+    "shared_signer_samples": [],
+    "graph": {
+      "nodes": [
+        {
+          "id": "def0f3b990dcd4375597b65ebc169f1965609fcd49999e0fb7230d18f1ce4603",
+          "kind": "certificate",
+          "label": "unknown-signer",
+          "family": null,
+          "known": false
+        },
+        {
+          "id": "78194ee14ca98c7b4d9909be90e3f5548c9bfc85cefd9509db513be061210361",
+          "kind": "sample",
+          "label": "sample:78194ee14c",
+          "known": false
+        }
+      ],
+      "links": [
+        {
+          "source": "def0f3b990dcd4375597b65ebc169f1965609fcd49999e0fb7230d18f1ce4603",
+          "target": "78194ee14ca98c7b4d9909be90e3f5548c9bfc85cefd9509db513be061210361",
+          "relation": "SIGNED_BY"
+        }
+      ]
+    },
+    "corpus_size": 19
+  },
+  "fraud": {
+    "otp_interception_risk": "MEDIUM",
+    "otp_triplet_complete": false,
+    "trojan_kit_complete": false,
+    "overlay_kit_without_admin": false,
+    "package_name_obfuscated": false,
+    "capabilities": {
+      "sms_interception": [
+        "READ_SMS",
+        "RECEIVE_SMS"
+      ],
+      "fraud_actions": [
+        "SEND_SMS"
+      ]
+    },
+    "signals": [
+      "Sms interception: READ_SMS, RECEIVE_SMS",
+      "Fraud actions: SEND_SMS",
+      "Surveillance capability: ACCESS_FINE_LOCATION",
+      "Surveillance capability: CAMERA",
+      "Surveillance capability: READ_CONTACTS"
+    ],
+    "targeted_banks": [],
+    "notes": [],
+    "fraud_signal_score": 1,
+    "fraud_signal_max": 10
+  },
+  "evasion": {
+    "sophistication": "LOW",
+    "techniques_detected": [
+      {
+        "key": "crypto",
+        "label": "Runtime string/payload decryption",
+        "strength": "weak"
+      }
+    ],
+    "evasion_count": 1,
+    "strong_indicators": 0,
+    "blind_spots": [
+      "Strings/config appear to be decrypted at runtime \u2014 any C2 URL may be encrypted at rest and not statically recoverable."
+    ]
+  },
+  "attack": {
+    "techniques": [
+      {
+        "id": "T1412",
+        "name": "Capture SMS Messages",
+        "tactic": "Collection",
+        "evidence": "READ_SMS + RECEIVE_SMS declared"
+      },
+      {
+        "id": "T1437",
+        "name": "Application Layer Protocol",
+        "tactic": "Command and Control",
+        "evidence": "Network access declared"
+      },
+      {
+        "id": "T1512",
+        "name": "Video Capture",
+        "tactic": "Collection",
+        "evidence": "Camera access declared"
+      },
+      {
+        "id": "T1430",
+        "name": "Location Tracking",
+        "tactic": "Discovery",
+        "evidence": "Fine location access declared"
+      },
+      {
+        "id": "T1636",
+        "name": "Protected User Data: Contacts",
+        "tactic": "Collection",
+        "evidence": "Contact list access declared"
+      },
+      {
+        "id": "T1409",
+        "name": "Stored Application Data",
+        "tactic": "Collection",
+        "evidence": "External storage read access"
+      },
+      {
+        "id": "T1624",
+        "name": "Event Triggered Execution",
+        "tactic": "Persistence",
+        "evidence": "Auto-start on device boot"
+      }
+    ],
+    "technique_count": 7,
+    "tactics": {
+      "Collection": [
+        "T1412",
+        "T1512",
+        "T1636",
+        "T1409"
+      ],
+      "Command and Control": [
+        "T1437"
+      ],
+      "Discovery": [
+        "T1430"
+      ],
+      "Persistence": [
+        "T1624"
+      ]
+    }
+  },
+  "risk": {
+    "headline_verdict": "MALICIOUS",
+    "ml_rule_disagreement": false,
+    "override_reasons": [],
+    "reconciliation_note": "",
+    "composite_score": 41.47,
+    "severity": "MEDIUM",
+    "severity_floor_applied": false,
+    "decomposition": [
+      {
+        "signal": "ml_confidence",
+        "sub_score": 0.9706,
+        "weight": 0.35,
+        "contribution": 33.97
+      },
+      {
+        "signal": "fraud_signals",
+        "sub_score": 0.1,
+        "weight": 0.25,
+        "contribution": 2.5
+      },
+      {
+        "signal": "attribution",
+        "sub_score": 0.1,
+        "weight": 0.2,
+        "contribution": 2.0
+      },
+      {
+        "signal": "evasion",
+        "sub_score": 0.3,
+        "weight": 0.1,
+        "contribution": 3.0
+      },
+      {
+        "signal": "targeting",
+        "sub_score": 0.0,
+        "weight": 0.1,
+        "contribution": 0.0
+      }
+    ],
+    "completeness_factor": 1.0,
+    "recommended_response": "Detailed manual review and IOC distribution"
+  },
+  "cache_hit": false,
+  "narrative": {
+    "executive_summary": "Verdict: MALICIOUS. The sample carries a composite risk score of 41.47 (MEDIUM). OTP-interception risk is rated MEDIUM. Targeting analysis identifies no specific Indian bank. Certificate attribution: not determined. 7 MITRE ATT&CK for Mobile techniques were mapped from static evidence. Recommended response: MEDIUM handling.",
+    "attack_chain_narrative": "Reconstructed attack chain from static evidence:\n  - [T1412] Capture SMS Messages \u2014 evidence: READ_SMS + RECEIVE_SMS declared\n  - [T1437] Application Layer Protocol \u2014 evidence: Network access declared\n  - [T1512] Video Capture \u2014 evidence: Camera access declared\n  - [T1430] Location Tracking \u2014 evidence: Fine location access declared\n  - [T1636] Protected User Data: Contacts \u2014 evidence: Contact list access declared\n  - [T1409] Stored Application Data \u2014 evidence: External storage read access\n  - [T1624] Event Triggered Execution \u2014 evidence: Auto-start on device boot",
+    "key_findings": [
+      "Verdict MALICIOUS (ML label MALICIOUS at 97% calibrated confidence)",
+      "OTP interception risk MEDIUM: Sms interception: READ_SMS, RECEIVE_SMS; Fraud actions: SEND_SMS; Surveillance capability: ACCESS_FINE_LOCATION",
+      "Evasion: Runtime string/payload decryption",
+      "ATT&CK techniques mapped: T1412, T1437, T1512, T1430, T1636, T1409, T1624"
+    ],
+    "recommended_actions": [
+      "Block the listed IOCs (package name, certificate fingerprint, any C2 hosts) at the mobile-threat and network perimeter.",
+      "Issue a customer advisory for no specific Indian bank covering fake-overlay login screens.",
+      "Search fraud logs for transactions from devices matching these indicators.",
+      "File the CERT-In notification below if the sample is novel or widespread."
+    ],
+    "cert_in_draft": {
+      "incident_title": "Android banking trojan sample \u2014 MEDIUM severity",
+      "incident_category": "Malware",
+      "affected_sector": "BFSI",
+      "severity": "MEDIUM",
+      "sample_hash_sha256": "78194ee14ca98c7b4d9909be90e3f5548c9bfc85cefd9509db513be061210361",
+      "malware_family": "not determined",
+      "targeted_institutions": [
+        "not determined"
+      ],
+      "attack_vectors": [
+        "Capture SMS Messages",
+        "Application Layer Protocol",
+        "Video Capture",
+        "Location Tracking",
+        "Protected User Data: Contacts",
+        "Stored Application Data",
+        "Event Triggered Execution"
+      ],
+      "recommended_mitigations": [
+        "Block listed IOCs at perimeter and MTD platform",
+        "Customer advisory on overlay phishing and OTP disclosure",
+        "Monitor for transactions correlated with these indicators"
+      ],
+      "reporting_urgency": "STANDARD",
+      "reporting_institution": "[ANALYST TO COMPLETE]",
+      "analyst_review_note": "DRAFT \u2014 verify all fields and IOCs before submission."
+    },
+    "generation_metadata": {
+      "mode": "TEMPLATE",
+      "model": null,
+      "label": "[TEMPLATE \u2014 deterministic, no LLM call]",
+      "fallback_used": true,
+      "reason": "demo cases use the deterministic template so they work offline; uploads use the live LLM when a key is configured"
+    },
+    "source_bundle": {
+      "sample_hashes": {
+        "md5": "2bca75673598ef4315326604eefa8e07",
+        "sha1": "3990be51cef97b1a1367c71c9d76f450d377cee8",
+        "sha256": "78194ee14ca98c7b4d9909be90e3f5548c9bfc85cefd9509db513be061210361"
+      },
+      "package": "com.fastloan.instant",
+      "verdict": {
+        "headline": "MALICIOUS",
+        "ml_label": "MALICIOUS",
+        "ml_confidence": 0.9706,
+        "ml_rule_disagreement": false,
+        "rule_override_reasons": []
+      },
+      "banking_trojan_kit": {
+        "complete": false,
+        "overlay_kit_without_admin": false
+      },
+      "shap_top_features": [
+        {
+          "feature": "SEND_SMS",
+          "full_name": "android.permission.SEND_SMS",
+          "contribution": 2.2706,
+          "present": true
+        },
+        {
+          "feature": "RECEIVE_BOOT_COMPLETED",
+          "full_name": "android.permission.RECEIVE_BOOT_COMPLETED",
+          "contribution": 2.1864,
+          "present": true
+        },
+        {
+          "feature": "READ_EXTERNAL_STORAGE",
+          "full_name": "android.permission.READ_EXTERNAL_STORAGE",
+          "contribution": -1.4038,
+          "present": true
+        },
+        {
+          "feature": "CAMERA",
+          "full_name": "android.permission.CAMERA",
+          "contribution": -1.1515,
+          "present": true
+        },
+        {
+          "feature": "READ_PHONE_STATE",
+          "full_name": "android.permission.READ_PHONE_STATE",
+          "contribution": 1.0223,
+          "present": true
+        },
+        {
+          "feature": "ACCESS_NETWORK_STATE",
+          "full_name": "android.permission.ACCESS_NETWORK_STATE",
+          "contribution": -0.6807,
+          "present": false
+        },
+        {
+          "feature": "RECEIVE",
+          "full_name": "com.google.android.c2dm.permission.RECEIVE",
+          "contribution": 0.5796,
+          "present": false
+        },
+        {
+          "feature": "READ_SMS",
+          "full_name": "android.permission.READ_SMS",
+          "contribution": -0.5705,
+          "present": true
+        }
+      ],
+      "otp_interception": {
+        "risk": "MEDIUM",
+        "signals": [
+          "Sms interception: READ_SMS, RECEIVE_SMS",
+          "Fraud actions: SEND_SMS",
+          "Surveillance capability: ACCESS_FINE_LOCATION",
+          "Surveillance capability: CAMERA",
+          "Surveillance capability: READ_CONTACTS"
+        ],
+        "target_banks": []
+      },
+      "attribution": {
+        "certificate_confidence": "NONE",
+        "related_families": []
+      },
+      "attack_techniques": [
+        {
+          "id": "T1412",
+          "name": "Capture SMS Messages",
+          "tactic": "Collection",
+          "evidence": "READ_SMS + RECEIVE_SMS declared"
+        },
+        {
+          "id": "T1437",
+          "name": "Application Layer Protocol",
+          "tactic": "Command and Control",
+          "evidence": "Network access declared"
+        },
+        {
+          "id": "T1512",
+          "name": "Video Capture",
+          "tactic": "Collection",
+          "evidence": "Camera access declared"
+        },
+        {
+          "id": "T1430",
+          "name": "Location Tracking",
+          "tactic": "Discovery",
+          "evidence": "Fine location access declared"
+        },
+        {
+          "id": "T1636",
+          "name": "Protected User Data: Contacts",
+          "tactic": "Collection",
+          "evidence": "Contact list access declared"
+        },
+        {
+          "id": "T1409",
+          "name": "Stored Application Data",
+          "tactic": "Collection",
+          "evidence": "External storage read access"
+        },
+        {
+          "id": "T1624",
+          "name": "Event Triggered Execution",
+          "tactic": "Persistence",
+          "evidence": "Auto-start on device boot"
+        }
+      ],
+      "evasion": {
+        "sophistication": "LOW",
+        "techniques": [
+          "Runtime string/payload decryption"
+        ]
+      },
+      "risk_score": {
+        "composite": 41.47,
+        "severity": "MEDIUM"
+      }
+    }
+  }
+}

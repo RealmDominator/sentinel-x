@@ -1,0 +1,9 @@
+# Normalise line endings so Windows and macOS/Linux clones diff cleanly.
+* text=auto
+*.py text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.html text eol=lf
+*.joblib binary
+*.docx binary
+*.apk binary
